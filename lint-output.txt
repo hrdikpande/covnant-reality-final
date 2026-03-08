@@ -1,0 +1,151 @@
+
+> convent-reality@0.1.0 lint
+> eslint
+
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/CityContext.tsx
+  33:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/CityContext.tsx:33:13
+  31 |         const saved = localStorage.getItem(STORAGE_KEY);
+  32 |         if (saved) {
+> 33 |             setSelectedCity(saved);
+     |             ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |         } else {
+  35 |             setIsCitySelectorOpen(true);
+  36 |         }  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/AffordableRentals.tsx
+  19:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/AffordableRentals.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |         fetchAffordableRentals(6, selectedCity || undefined).then((data) => {
+  21 |             if (!cancelled) {
+  22 |                 setProperties(data);  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/FeaturedProjects.tsx
+  19:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/FeaturedProjects.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |         fetchFeaturedProjects(6, selectedCity || undefined).then((data) => {
+  21 |             if (!cancelled) {
+  22 |                 setProjects(data);  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/PremiumProperties.tsx
+  19:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/PremiumProperties.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |         fetchPremiumProperties(6, selectedCity || undefined).then((data) => {
+  21 |             if (!cancelled) {
+  22 |                 setProperties(data);  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/RecentlyAddedProperties.tsx
+  19:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/RecentlyAddedProperties.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |         fetchRecentProperties(8, selectedCity || undefined).then((data) => {
+  21 |             if (!cancelled) {
+  22 |                 setProperties(data);  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/RecommendedForYou.tsx
+  20:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/RecommendedForYou.tsx:20:9
+  18 |     useEffect(() => {
+  19 |         let cancelled = false;
+> 20 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |         fetchRecommendedProperties(6, selectedCity || undefined).then((data) => {
+  22 |             if (!cancelled) {
+  23 |                 setProperties(data);  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/TopAgents.tsx
+  19:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/TopAgents.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |         fetchTopAgents(8, selectedCity || undefined).then((data) => {
+  21 |             if (!cancelled) {
+  22 |                 setAgents(data);  react-hooks/set-state-in-effect
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/VerifiedProperties.tsx
+  19:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/rijanrayamajhi/Desktop/Spotsweb/convent-reality/components/ui/VerifiedProperties.tsx:19:9
+  17 |     useEffect(() => {
+  18 |         let cancelled = false;
+> 19 |         setLoading(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  20 |         fetchVerifiedProperties(6, selectedCity || undefined).then((data) => {
+  21 |             if (!cancelled) {
+  22 |                 setProperties(data);  react-hooks/set-state-in-effect
+
+✖ 8 problems (8 errors, 0 warnings)
+
