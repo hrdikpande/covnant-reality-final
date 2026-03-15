@@ -15,6 +15,7 @@ export interface Property {
     area_unit?: string;
     image: string;
     images: string[];
+    videos: string[];
     badge?: PropertyBadge;
     type: PropertyType;
     listed: string; // ISO date string

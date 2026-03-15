@@ -17,7 +17,12 @@ function getPublicUrl(path: string): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRowToProperty(row: any): Property {
     const media = (row.property_media || []) as { media_url: string; media_type: string }[];
-    const imageUrls = media.map((m) => getPublicUrl(m.media_url));
+    const imageUrls = media
+        .filter((m) => m.media_type === "image" || !m.media_type)
+        .map((m) => getPublicUrl(m.media_url));
+    const videoUrls = media
+        .filter((m) => m.media_type === "video")
+        .map((m) => getPublicUrl(m.media_url));
     const primaryImage = imageUrls[0] || "/placeholder-property.jpg";
 
     return {
@@ -35,6 +40,7 @@ function mapRowToProperty(row: any): Property {
         area_unit: row.area_unit ?? "Sq ft",
         image: primaryImage,
         images: imageUrls.length > 0 ? imageUrls : [primaryImage],
+        videos: videoUrls,
         type: row.property_type || "apartment",
         listed: row.created_at || new Date().toISOString(),
         featured: row.is_featured ?? false,

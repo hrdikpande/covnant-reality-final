@@ -6,13 +6,19 @@ import { BadgeCheck, Heart } from "lucide-react";
 
 interface GallerySectionProps {
     images: string[];
+    videos?: string[];
     verified?: boolean;
 }
 
-export function GallerySection({ images, verified }: GallerySectionProps) {
-    const displayImages = images.length > 0
-        ? images
-        : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"];
+export function GallerySection({ images, videos = [], verified }: GallerySectionProps) {
+    const allMedia = [
+        ...images.map(src => ({ src, type: 'image' as const })),
+        ...videos.map(src => ({ src, type: 'video' as const }))
+    ];
+
+    const displayMedia = allMedia.length > 0
+        ? allMedia
+        : [{ src: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800", type: 'image' as const }];
 
     const [activeIndex, setActiveIndex] = useState(0);
     const [isSaved, setIsSaved] = useState(false);
@@ -26,7 +32,7 @@ export function GallerySection({ images, verified }: GallerySectionProps) {
             const scrollPosition = container.scrollLeft;
             const itemWidth = container.offsetWidth;
             const newIndex = Math.round(scrollPosition / itemWidth);
-            if (newIndex !== activeIndex && newIndex >= 0 && newIndex < displayImages.length) {
+            if (newIndex !== activeIndex && newIndex >= 0 && newIndex < displayMedia.length) {
                 setActiveIndex(newIndex);
             }
         };
@@ -42,7 +48,7 @@ export function GallerySection({ images, verified }: GallerySectionProps) {
             container.removeEventListener("scroll", debouncedScroll);
             clearTimeout(timeoutId);
         };
-    }, [activeIndex, displayImages.length]);
+    }, [activeIndex, displayMedia.length]);
 
     return (
         <section className="relative w-full aspect-[4/3] max-h-[300px] md:max-h-[380px] lg:max-h-[450px] bg-bg group lg:rounded-t-2xl overflow-hidden">
@@ -52,18 +58,27 @@ export function GallerySection({ images, verified }: GallerySectionProps) {
                 className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide overscroll-x-contain"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-                {displayImages.map((src, idx) => (
+                {displayMedia.map((media, idx) => (
                     <div
                         key={idx}
                         className="w-full h-full flex-shrink-0 snap-center snap-always relative"
                     >
-                        <Image
-                            src={src}
-                            alt={`Property image ${idx + 1}`}
-                            fill
-                            className="object-cover"
-                            priority={idx === 0}
-                        />
+                        {media.type === 'image' ? (
+                            <Image
+                                src={media.src}
+                                alt={`Property image ${idx + 1}`}
+                                fill
+                                className="object-cover"
+                                priority={idx === 0}
+                            />
+                        ) : (
+                            <video
+                                src={media.src}
+                                controls
+                                className="w-full h-full object-cover"
+                                poster={images[0]} // Use first image as poster for videos
+                            />
+                        )}
                     </div>
                 ))}
             </div>
@@ -88,9 +103,9 @@ export function GallerySection({ images, verified }: GallerySectionProps) {
             </button>
 
             {/* Bottom Center: Indicator Dots */}
-            {displayImages.length > 1 && (
+            {displayMedia.length > 1 && (
                 <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-center gap-2">
-                    {displayImages.map((_, idx) => (
+                    {displayMedia.map((_, idx) => (
                         <div
                             key={idx}
                             className={`h-1.5 rounded-full transition-all duration-300 ${activeIndex === idx ? "bg-white w-5" : "bg-white/50 w-1.5"}`}

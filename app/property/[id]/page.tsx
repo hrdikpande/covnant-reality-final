@@ -120,7 +120,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <div className="lg:grid lg:grid-cols-12 lg:gap-10 lg:pt-6">
                     {/* Left Column */}
                     <div className="lg:col-span-8 lg:bg-bg-card lg:rounded-2xl lg:overflow-hidden lg:shadow-sm">
-                        <GallerySection images={property.images} verified={property.verified} />
+                        <GallerySection images={property.images} videos={property.videos} verified={property.verified} />
 
                         <div className="px-4 md:px-6 lg:px-8 py-4 space-y-6 md:space-y-8">
                             <PriceSection property={property} displayUnit={displayUnit} setDisplayUnit={setDisplayUnit} />
