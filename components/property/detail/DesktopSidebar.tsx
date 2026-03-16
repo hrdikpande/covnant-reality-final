@@ -58,14 +58,20 @@ export function DesktopSidebar({ property }: DesktopSidebarProps) {
                     {/* Contact Buttons */}
                     <div className="space-y-3 mb-4">
                         <button
-                            onClick={() => openModal("Call", () => { window.location.href = "tel:1234567890"; })}
+                            onClick={() => openModal("Call", () => { 
+                                const dialNumber = property.contactNumber || "1234567890";
+                                window.location.href = `tel:${dialNumber}`; 
+                            })}
                             className="w-full flex items-center justify-center gap-2 py-3 bg-bg-card border border-border text-text-primary rounded-xl text-sm font-medium hover:bg-slate-50 active:scale-[0.98] transition-all"
                         >
                             <Phone className="w-4 h-4" />
                             Call Now
                         </button>
                         <button
-                            onClick={() => openModal("WhatsApp", () => { window.open("https://wa.me/911234567890", "_blank"); })}
+                            onClick={() => openModal("WhatsApp", () => { 
+                                const waNumber = property.whatsappNumber || "911234567890";
+                                window.open(`https://wa.me/${waNumber}`, "_blank"); 
+                            })}
                             className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white rounded-xl text-sm font-medium hover:bg-[#20BE5C] active:scale-[0.98] transition-all shadow-sm"
                         >
                             <MessageCircle className="w-4 h-4" />

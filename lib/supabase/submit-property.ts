@@ -36,6 +36,8 @@ export interface PropertyFormData {
     allowPhone?: boolean;
     allowWhatsApp?: boolean;
     allowChat?: boolean;
+    contactNumber?: string;
+    whatsappNumber?: string;
 }
 
 export interface ValidationResult {
@@ -165,6 +167,10 @@ export function mapFormDataToRpcPayload(formData: PropertyFormData) {
         pincode: formData.pincode ?? null,
         rera_number: formData.reraNumber ?? null,
         commercial_type: formData.commercialType ?? null,
+        contact_number: formData.contactNumber ?? null,
+        whatsapp_number: formData.whatsappNumber ?? null,
+        allow_phone: formData.allowPhone ?? true,
+        allow_whatsapp: formData.allowWhatsApp ?? true,
     };
 }
 

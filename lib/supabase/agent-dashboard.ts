@@ -125,6 +125,8 @@ export interface PropertyEditData {
     allow_phone: boolean;
     allow_whatsapp: boolean;
     allow_chat: boolean;
+    contact_number: string | null;
+    whatsapp_number: string | null;
     property_media: { media_url: string; media_type: string }[];
 }
 
@@ -140,6 +142,7 @@ export async function fetchPropertyForEdit(propertyId: string): Promise<Property
             facing, floor, total_floors, possession_status,
             address, locality, city, state, rera_number, commercial_type,
             amenities, allow_phone, allow_whatsapp, allow_chat,
+            contact_number, whatsapp_number,
             property_media ( media_url, media_type )
         `)
         .eq("id", propertyId)

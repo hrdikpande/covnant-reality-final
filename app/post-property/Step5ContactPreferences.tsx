@@ -15,6 +15,24 @@ export function Step5ContactPreferences({ formData, updateFormData }: Step5Conta
         updateFormData({ [key]: !currentValue });
     };
 
+    const sameAsPhone = !formData.whatsappNumber || formData.whatsappNumber === formData.contactNumber;
+
+    const handlePhoneChange = (val: string) => {
+        updateFormData({ contactNumber: val });
+        // Auto-sync WhatsApp number if it was mirroring phone
+        if (sameAsPhone) {
+            updateFormData({ whatsappNumber: val });
+        }
+    };
+
+    const handleWhatsAppChange = (val: string) => {
+        updateFormData({ whatsappNumber: val });
+    };
+
+    const handleSameAsPhone = () => {
+        updateFormData({ whatsappNumber: formData.contactNumber ?? "" });
+    };
+
     return (
         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="mb-6 md:mb-8">
@@ -22,10 +40,63 @@ export function Step5ContactPreferences({ formData, updateFormData }: Step5Conta
                     How should buyers contact you?
                 </h3>
                 <p className="text-sm md:text-base text-text-secondary mt-1">
-                    Select the communication channels you prefer for receiving property inquiries.
+                    Add a contact number and select the channels you prefer for property inquiries.
                 </p>
             </div>
 
+            {/* Phone Number Input */}
+            <div className="mb-6 space-y-4 max-w-4xl">
+                <div>
+                    <label className="block text-sm font-semibold text-text-primary mb-1.5">
+                        Contact Phone Number <span className="text-danger">*</span>
+                    </label>
+                    <div className="flex items-center border border-border rounded-xl overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all bg-white">
+                        <span className="px-3 py-3 text-sm text-text-muted border-r border-border bg-slate-50 select-none">+91</span>
+                        <input
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            placeholder="10-digit mobile number"
+                            value={formData.contactNumber ?? ""}
+                            onChange={(e) => handlePhoneChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            className="flex-1 px-3 py-3 text-sm text-text-primary outline-none bg-transparent"
+                        />
+                    </div>
+                    <p className="text-xs text-text-muted mt-1">This number will be shown to buyers who want to call you.</p>
+                </div>
+
+                <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-sm font-semibold text-text-primary">
+                            WhatsApp Number
+                        </label>
+                        {formData.contactNumber && (
+                            <button
+                                type="button"
+                                onClick={handleSameAsPhone}
+                                className="text-xs text-primary hover:underline font-medium"
+                            >
+                                Same as phone
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex items-center border border-border rounded-xl overflow-hidden focus-within:border-[#25D366] focus-within:ring-1 focus-within:ring-[#25D366]/20 transition-all bg-white">
+                        <span className="px-3 py-3 text-sm text-text-muted border-r border-border bg-slate-50 select-none">+91</span>
+                        <input
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            placeholder="10-digit WhatsApp number"
+                            value={formData.whatsappNumber ?? ""}
+                            onChange={(e) => handleWhatsAppChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            className="flex-1 px-3 py-3 text-sm text-text-primary outline-none bg-transparent"
+                        />
+                    </div>
+                    <p className="text-xs text-text-muted mt-1">Leave blank to use the same number as above.</p>
+                </div>
+            </div>
+
+            {/* Channel Toggles */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
                 {/* Phone Call */}
                 <div

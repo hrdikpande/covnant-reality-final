@@ -58,6 +58,8 @@ function mapRowToProperty(row: any): Property {
         pricePerSqFt: (row.area_sqft && row.area_sqft > 0) ? Math.round(row.price / row.area_sqft) : null,
         latitude: row.latitude || row.localities?.latitude || null,
         longitude: row.longitude || row.localities?.longitude || null,
+        contactNumber: row.contact_number ?? null,
+        whatsappNumber: row.whatsapp_number ?? null,
     };
 }
 
@@ -83,7 +85,7 @@ const PROPERTY_SELECT = `
     price, area_sqft, area_value, area_unit, bedrooms, bathrooms,
     furnishing, floor, total_floors, facing, possession_status,
     address, locality, city, state, status, is_verified, created_at,
-    latitude, longitude,
+    latitude, longitude, contact_number, whatsapp_number,
     localities ( latitude, longitude ),
     property_media ( media_url, media_type )
 `;

@@ -21,6 +21,8 @@ export const mockProperties: Property[] = [
         listed: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
         featured: true,
         verified: true,
+        contactNumber: "+919876543210",
+        whatsappNumber: "919876543210",
     },
     {
         id: "2",
@@ -41,6 +43,8 @@ export const mockProperties: Property[] = [
         type: "villa",
         listed: new Date(Date.now() - 86400000 * 1).toISOString(), // 1 day ago
         featured: true,
+        contactNumber: "+919823456780",
+        whatsappNumber: "919823456780",
     },
     {
         id: "3",
@@ -62,6 +66,8 @@ export const mockProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 2.5).toISOString(), // 2 days ago
         featured: false,
         verified: true,
+        contactNumber: "+919812345670",
+        whatsappNumber: "919812345670",
     },
     {
         id: "4",
@@ -83,6 +89,8 @@ export const mockProperties: Property[] = [
         listed: new Date(Date.now() - 3600000 * 12).toISOString(), // 12 hours ago
         featured: false,
         verified: true,
+        contactNumber: "+919900123456",
+        whatsappNumber: "919900123456",
     },
     {
         id: "5",
@@ -104,6 +112,8 @@ export const mockProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 4).toISOString(), // 4 days ago
         featured: false,
         verified: true,
+        contactNumber: "+918877665540",
+        whatsappNumber: "918877665540",
     },
     {
         id: "6",
@@ -125,6 +135,8 @@ export const mockProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 1.5).toISOString(), // 1 day ago
         featured: true,
         verified: true,
+        contactNumber: "+918833441100",
+        whatsappNumber: "918833441100",
     },
 ];
 
@@ -148,6 +160,8 @@ export const mockRecommendedProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 3).toISOString(),
         featured: true,
         verified: true,
+        contactNumber: "+919001122334",
+        whatsappNumber: "919001122334",
     },
     {
         id: "r2",
@@ -167,6 +181,8 @@ export const mockRecommendedProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 5).toISOString(),
         featured: false,
         verified: true,
+        contactNumber: "+919112233445",
+        whatsappNumber: "919112233445",
     },
     {
         id: "r3",
@@ -187,6 +203,8 @@ export const mockRecommendedProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 2).toISOString(),
         featured: true,
         verified: true,
+        contactNumber: "+919223344556",
+        whatsappNumber: "919223344556",
     },
     {
         id: "r4",
@@ -206,6 +224,8 @@ export const mockRecommendedProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 6).toISOString(),
         featured: false,
         verified: true,
+        contactNumber: "+919334455667",
+        whatsappNumber: "919334455667",
     },
     {
         id: "r5",
@@ -226,6 +246,8 @@ export const mockRecommendedProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 1).toISOString(),
         featured: false,
         verified: false,
+        contactNumber: "+919445566778",
+        whatsappNumber: "919445566778",
     },
 ];
 
@@ -249,6 +271,8 @@ export const mockRentalsProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 2).toISOString(),
         featured: true,
         verified: true,
+        contactNumber: "+919556677889",
+        whatsappNumber: "919556677889",
     },
     {
         id: "rent2",
@@ -269,6 +293,8 @@ export const mockRentalsProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 1).toISOString(),
         featured: false,
         verified: true,
+        contactNumber: "+919667788990",
+        whatsappNumber: "919667788990",
     },
     {
         id: "rent3",
@@ -289,6 +315,8 @@ export const mockRentalsProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 4).toISOString(),
         featured: true,
         verified: true,
+        contactNumber: "+919778899001",
+        whatsappNumber: "919778899001",
     },
     {
         id: "rent4",
@@ -309,6 +337,8 @@ export const mockRentalsProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 5).toISOString(),
         featured: false,
         verified: true,
+        contactNumber: "+919889900112",
+        whatsappNumber: "919889900112",
     },
     {
         id: "rent5",
@@ -329,6 +359,8 @@ export const mockRentalsProperties: Property[] = [
         listed: new Date(Date.now() - 86400000 * 3).toISOString(),
         featured: false,
         verified: false,
+        contactNumber: "+919990011223",
+        whatsappNumber: "919990011223",
     },
 ];
 

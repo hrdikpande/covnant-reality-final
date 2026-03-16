@@ -226,7 +226,8 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
                                 phone: "",
                                 source: "Call",
                             }).catch(() => { /* best-effort */ });
-                            window.location.href = "tel:1234567890";
+                            const dialNumber = property.contactNumber || "1234567890";
+                            window.location.href = `tel:${dialNumber}`;
                         }}
                     >
                         <Phone className="h-3.5 w-3.5" />

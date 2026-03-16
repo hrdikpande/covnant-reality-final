@@ -38,6 +38,10 @@ export interface Property {
     // Reviews
     rating?: number;
     reviewCount?: number;
+
+    // Contact
+    contactNumber?: string | null;
+    whatsappNumber?: string | null;
 }
 
 export type PropertyStatus = "Pending Approval" | "Approved" | "Rejected";
