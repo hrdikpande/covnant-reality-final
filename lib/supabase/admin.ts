@@ -155,6 +155,21 @@ export async function rejectProperty(propertyId: string): Promise<{
     return { success: true, error: null };
 }
 
+/**
+ * Delete a property via the API route.
+ */
+export async function deleteAdminProperty(propertyId: string): Promise<{
+    success: boolean;
+    error: string | null;
+}> {
+    const { data, error } = await apiFetch<{ success: boolean }>("/api/admin/properties", {
+        method: "DELETE",
+        body: JSON.stringify({ propertyId }),
+    });
+    if (error || !data) return { success: false, error };
+    return { success: true, error: null };
+}
+
 /* ── Users ─────────────────────────────────────────────────── */
 
 /**

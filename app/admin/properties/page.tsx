@@ -10,6 +10,7 @@ import {
     fetchAdminProperties,
     approveProperty,
     rejectProperty,
+    deleteAdminProperty,
     type AdminProperty,
 } from "@/lib/supabase/admin";
 
@@ -93,6 +94,20 @@ export default function PropertyModerationPage() {
         setActionLoading(id);
         const { error: err } = await rejectProperty(id);
         setActionLoading(null);
+        if (err) {
+            setError(err);
+            return;
+        }
+        await fetchData(page);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to permanently delete this property? This action cannot be undone.")) return;
+        
+        setActionLoading(id);
+        const { error: err } = await deleteAdminProperty(id);
+        setActionLoading(null);
+        
         if (err) {
             setError(err);
             return;
@@ -187,6 +202,7 @@ export default function PropertyModerationPage() {
                         properties={filteredProperties}
                         onApprove={handleApprove}
                         onReject={handleReject}
+                        onDelete={handleDelete}
                         actionLoading={actionLoading}
                     />
                     <AdminPagination

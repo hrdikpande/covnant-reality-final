@@ -121,3 +121,49 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }
+
+/**
+ * DELETE /api/admin/properties
+ * Body: { propertyId: string }
+ */
+export async function DELETE(request: NextRequest) {
+    const { error: authError } = await verifyAdmin();
+    if (authError) {
+        return NextResponse.json({ error: authError }, { status: 401 });
+    }
+
+    const { propertyId } = await request.json();
+    if (!propertyId) {
+        return NextResponse.json({ error: "Missing propertyId" }, { status: 400 });
+    }
+
+    const supabase = await createClient();
+
+    // 1. Fetch media for storage deletion
+    const { data: mediaRows } = await supabase
+        .from("property_media")
+        .select("media_url")
+        .eq("property_id", propertyId);
+
+    if (mediaRows && mediaRows.length > 0) {
+        const paths = (mediaRows as Record<string, string>[])
+            .map((m) => m.media_url)
+            .filter((p: string) => p && !p.startsWith("http") && !p.startsWith("/"));
+        
+        if (paths.length > 0) {
+            await supabase.storage.from("property-media").remove(paths);
+        }
+    }
+
+    // 2. Delete the property (cascades to DB media, etc.)
+    const { error } = await supabase
+        .from("properties")
+        .delete()
+        .eq("id", propertyId);
+
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+}

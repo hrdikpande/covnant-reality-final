@@ -126,7 +126,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                             <PriceSection property={property} displayUnit={displayUnit} setDisplayUnit={setDisplayUnit} />
                             <OverviewSection property={property} displayUnit={displayUnit} />
                             <EmiCalculatorSection price={property.price} listingType={property.listingType} />
-                            <AmenitiesSection />
+                            <AmenitiesSection property={property} />
                             <FloorPlanSection property={property} />
                             <MapSection property={property} />
                             <NearbySection />

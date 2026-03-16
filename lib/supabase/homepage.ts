@@ -60,6 +60,9 @@ function mapRowToProperty(row: any): Property {
         longitude: row.longitude || row.localities?.longitude || null,
         contactNumber: row.contact_number ?? null,
         whatsappNumber: row.whatsapp_number ?? null,
+        amenities: row.amenities ?? [],
+        allowChat: row.allow_chat ?? true,
+        landmark: row.landmark ?? null,
     };
 }
 
@@ -85,7 +88,7 @@ const PROPERTY_SELECT = `
     price, area_sqft, area_value, area_unit, bedrooms, bathrooms,
     furnishing, floor, total_floors, facing, possession_status,
     address, locality, city, state, status, is_verified, created_at,
-    latitude, longitude, contact_number, whatsapp_number,
+    latitude, longitude, contact_number, whatsapp_number, amenities, allow_chat, landmark,
     localities ( latitude, longitude ),
     property_media ( media_url, media_type )
 `;

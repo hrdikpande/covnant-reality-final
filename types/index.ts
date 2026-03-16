@@ -42,6 +42,11 @@ export interface Property {
     // Contact
     contactNumber?: string | null;
     whatsappNumber?: string | null;
+
+    // Additional Fields
+    amenities?: string[] | null;
+    allowChat?: boolean;
+    landmark?: string | null;
 }
 
 export type PropertyStatus = "Pending Approval" | "Approved" | "Rejected";

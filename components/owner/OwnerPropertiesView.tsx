@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Search, Edit, Trash2, Eye } from "lucide-react";
-import { getOwnerProperties, type OwnerProperty } from "@/lib/supabase/owner";
+import { getOwnerProperties, deleteOwnerProperty, type OwnerProperty } from "@/lib/supabase/owner";
 import { useAuth } from "@/components/AuthContext";
 import { Input } from "@/components/ui/Input";
 
@@ -12,17 +13,50 @@ export function OwnerPropertiesView() {
     const [properties, setProperties] = useState<OwnerProperty[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    const fetchProperties = useCallback(async (showLoading = true) => {
+        if (!user) return;
+        if (showLoading) setIsLoading(true);
+        const data = await getOwnerProperties(user.id);
+        setProperties(data);
+        setIsLoading(false);
+    }, [user]);
 
     useEffect(() => {
-        if (!user) return;
+        let isMounted = true;
 
-        const fetchProperties = async () => {
+        const initFetch = async () => {
+            if (!user) return;
+            // First fetch doesn't need to call setIsLoading(true) because it's already true
             const data = await getOwnerProperties(user.id);
-            setProperties(data);
-            setIsLoading(false);
+            if (isMounted) {
+                setProperties(data);
+                setIsLoading(false);
+            }
         };
-        fetchProperties();
+
+        initFetch();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [user]);
+
+    const handleDelete = async (propertyId: string) => {
+        if (!user || isDeleting) return;
+        if (!window.confirm("Are you sure you want to delete this property? This cannot be undone.")) return;
+        
+        setIsDeleting(propertyId);
+        const { success, error } = await deleteOwnerProperty(propertyId, user.id);
+        setIsDeleting(null);
+        
+        if (success) {
+            await fetchProperties();
+        } else {
+            alert(`Failed to delete property: ${error}`);
+        }
+    };
 
     const filteredProperties = properties.filter(p =>
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -123,13 +157,22 @@ export function OwnerPropertiesView() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button className="p-2 text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="View Details">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 text-text-secondary hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit Property">
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 text-text-secondary hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete Property">
+                                                <Link href={`/property/${property.id}`} prefetch={false}>
+                                                    <button className="p-2 text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="View Details">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                </Link>
+                                                <Link href={`/post-property?edit=${property.id}`} prefetch={false}>
+                                                    <button className="p-2 text-text-secondary hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Edit Property">
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                </Link>
+                                                <button 
+                                                    onClick={() => handleDelete(property.id)}
+                                                    disabled={isDeleting === property.id}
+                                                    className={`p-2 rounded-md transition-colors ${isDeleting === property.id ? 'opacity-50 cursor-not-allowed text-text-muted' : 'text-text-secondary hover:text-red-600 hover:bg-red-50'}`} 
+                                                    title="Delete Property"
+                                                >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>

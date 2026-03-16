@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Check, X, MapPin, Loader2 } from "lucide-react";
+import { MoreVertical, Check, X, MapPin, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AdminProperty } from "@/lib/supabase/admin";
 
@@ -9,6 +9,7 @@ interface AdminPropertyTableProps {
     properties: AdminProperty[];
     onApprove: (id: string) => void;
     onReject: (id: string) => void;
+    onDelete?: (id: string) => void;
     actionLoading: string | null;
 }
 
@@ -75,6 +76,7 @@ export function AdminPropertyTable({
     properties,
     onApprove,
     onReject,
+    onDelete,
     actionLoading,
 }: AdminPropertyTableProps) {
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -89,6 +91,8 @@ export function AdminPropertyTable({
             onApprove(id);
         } else if (action === "reject") {
             onReject(id);
+        } else if (action === "delete" && onDelete) {
+            onDelete(id);
         }
     };
 
@@ -276,6 +280,15 @@ export function AdminPropertyTable({
                                                                     >
                                                                         <X className="mr-2 h-4 w-4" />
                                                                         Reject
+                                                                    </button>
+                                                                )}
+                                                                {onDelete && (
+                                                                    <button
+                                                                        onClick={() => handleAction(property.id, "delete")}
+                                                                        className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 border-t border-border mt-1 font-medium"
+                                                                    >
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        Delete Permanently
                                                                     </button>
                                                                 )}
                                                             </div>

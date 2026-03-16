@@ -246,3 +246,40 @@ export async function updateOwnerProfile(ownerId: string, updates: Record<string
 
     return { success: true };
 }
+
+export async function deleteOwnerProperty(propertyId: string, ownerId: string): Promise<{ success: boolean; error?: string }> {
+    const supabase = createClient();
+
+    // 1. Fetch media paths to delete from storage
+    const { data: mediaRows } = await supabase
+        .from("property_media")
+        .select("media_url")
+        .eq("property_id", propertyId);
+
+    if (mediaRows && mediaRows.length > 0) {
+        const paths = mediaRows
+            .map((m: { media_url: string }) => m.media_url)
+            .filter((p: string) => p && !p.startsWith("http") && !p.startsWith("/"));
+        
+        if (paths.length > 0) {
+            await supabase.storage.from("property-media").remove(paths);
+        }
+    }
+
+    // 2. Delete media rows (DB)
+    await supabase.from("property_media").delete().eq("property_id", propertyId);
+
+    // 3. Delete property (guarded by owner_id so only the owner can delete)
+    const { error } = await supabase
+        .from("properties")
+        .delete()
+        .eq("id", propertyId)
+        .eq("owner_id", ownerId);
+
+    if (error) {
+        console.error("Error deleting property:", error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}
