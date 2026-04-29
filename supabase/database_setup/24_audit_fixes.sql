@@ -63,12 +63,12 @@ CREATE POLICY "Unified SELECT for activity_logs" ON activity_logs FOR SELECT USI
 );
 
 -- cities (SELECT)
+-- The following policies ensure anyone can read cities and admins can manage them.
 DROP POLICY IF EXISTS "Anyone can read cities" ON cities;
-DROP POLICY IF EXISTS "Admins can manage cities" ON cities; -- NOTE: "Admins can manage" was FOR ALL. We keep FOR ALL for admin, but add read for anyone.
--- Wait, combining ALL and SELECT is tricky. Better to leave FOR ALL alone, and have a single FOR SELECT.
--- But the prompt asked to combine SELECT policies. The admin policy is FOR ALL. If we drop it, we lose INSERT/UPDATE/DELETE.
--- So we keep "Admins can manage cities" FOR ALL, and keep "Anyone can read cities" FOR SELECT. This is standard Postgres.
--- I will skip combining where one is FOR ALL and the other is FOR SELECT.
+DROP POLICY IF EXISTS "Admins can manage cities" ON cities;
+
+CREATE POLICY "Anyone can read cities" ON cities FOR SELECT USING (true);
+CREATE POLICY "Admins can manage cities" ON cities FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin'));
 
 -- followups (SELECT)
 DROP POLICY IF EXISTS "Agents can see own followups" ON followups;

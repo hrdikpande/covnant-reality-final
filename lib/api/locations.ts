@@ -29,6 +29,14 @@ const cache = {
     localitiesByCity: {} as Record<string, Locality[]>
 };
 
+export function clearLocationsCache(type: 'cities' | 'localities', parentId: string) {
+    if (type === 'cities') {
+        delete cache.citiesByState[parentId];
+    } else if (type === 'localities') {
+        delete cache.localitiesByCity[parentId];
+    }
+}
+
 /**
  * Fetch all active states
  */

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { State, City, Locality, getStates, getCitiesByState, getLocalitiesByCity } from "@/lib/api/locations";
+import { State, City, Locality, getStates, getCitiesByState, getLocalitiesByCity, clearLocationsCache } from "@/lib/api/locations";
 import { Trash2, Plus, AlertCircle, Loader2 } from "lucide-react";
 
 export default function AdminLocationsPage() {
@@ -82,11 +82,15 @@ export default function AdminLocationsPage() {
 
             setNewCityName("");
 
+            setNewCityName("");
+
             // clear cache for this state and reload
+            clearLocationsCache('cities', selectedState);
             loadCities(selectedState);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to add city";
-            alert(message);
+        } catch (err: any) {
+            console.error("Add city error:", err);
+            const message = err?.message || "Failed to add city";
+            alert(`Error: ${message}`);
         }
     };
 
@@ -95,10 +99,12 @@ export default function AdminLocationsPage() {
         try {
             const { error: dbError } = await supabase.from("cities").delete().eq("id", id);
             if (dbError) throw dbError;
+            clearLocationsCache('cities', selectedState);
             loadCities(selectedState);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to delete city";
-            alert(message);
+        } catch (err: any) {
+            console.error("Delete city error:", err);
+            const message = err?.message || "Failed to delete city";
+            alert(`Error: ${message}`);
         }
     };
 
@@ -119,10 +125,12 @@ export default function AdminLocationsPage() {
 
             setNewLocalityName("");
             setNewLocalityPincode("");
+            clearLocationsCache('localities', selectedCity);
             loadLocalities(selectedCity);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to add locality";
-            alert(message);
+        } catch (err: any) {
+            console.error("Add locality error:", err);
+            const message = err?.message || "Failed to add locality";
+            alert(`Error: ${message}`);
         }
     };
 
@@ -131,10 +139,12 @@ export default function AdminLocationsPage() {
         try {
             const { error: dbError } = await supabase.from("localities").delete().eq("id", id);
             if (dbError) throw dbError;
+            clearLocationsCache('localities', selectedCity);
             loadLocalities(selectedCity);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to delete locality";
-            alert(message);
+        } catch (err: any) {
+            console.error("Delete locality error:", err);
+            const message = err?.message || "Failed to delete locality";
+            alert(`Error: ${message}`);
         }
     };
 
