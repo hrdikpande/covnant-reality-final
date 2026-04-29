@@ -36,6 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google-site-verification" content="QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased bg-bg text-text-primary`}>
         <ErrorBoundary>
           <AuthProvider>
