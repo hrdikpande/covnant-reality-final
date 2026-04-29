@@ -201,6 +201,7 @@ export interface SearchFilters {
     bedrooms?: number;
     listing_type?: string;
     property_type?: string;
+    subtype?: string;
     is_verified?: boolean;
     sort_by?: "newest" | "price_low" | "price_high";
     agentId?: string;

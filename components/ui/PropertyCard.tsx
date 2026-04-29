@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn, formatPropertyTitle } from "@/lib/utils";
 import { usePropertyContext } from "@/components/PropertyContext";
 import { createLead } from "@/lib/supabase/leads";
 import type { Property } from "@/types";
@@ -78,7 +78,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
             <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
                     src={image}
-                    alt={title}
+                    alt={formatPropertyTitle(property)}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
@@ -152,8 +152,8 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
             <div className="p-4 space-y-3">
                 {/* Title & Location */}
                 <div>
-                    <h3 className="text-base font-semibold text-text-primary line-clamp-1 group-hover:text-primary transition-colors">
-                        {title}
+                    <h3 className="text-base font-semibold text-text-primary line-clamp-1 group-hover:text-primary transition-colors capitalize">
+                        {formatPropertyTitle(property)}
                     </h3>
                     <div className="flex items-center gap-1 mt-1 text-text-secondary">
                         <MapPin className="h-3.5 w-3.5" />

@@ -8,6 +8,7 @@ import { FilterDrawer } from '@/components/ui/FilterDrawer';
 import { FilterContent } from '@/components/ui/FilterContent';
 import { useState, useRef, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { formatPropertyTitle } from '@/lib/utils';
 import type { SearchProperty, SearchFilters } from '@/types';
 
 // ─── Property Card for search results ───────────────────────────────────────
@@ -33,6 +34,10 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
         return `${Math.floor(days / 30)}mo ago`;
     };
 
+    const formatTitle = (property: SearchProperty) => {
+        return formatPropertyTitle(property);
+    };
+
     return (
         <Link
             href={`/property/${property.id}`}
@@ -43,7 +48,7 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
                 {hasImage ? (
                     <Image
                         src={property.image_url!}
-                        alt={property.title}
+                        alt={formatTitle(property)}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={() => setImgError(true)}
@@ -76,8 +81,8 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
 
             {/* Content */}
             <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-semibold text-text-primary text-base line-clamp-1 group-hover:text-primary transition-colors">
-                    {property.title}
+                <h3 className="font-semibold text-text-primary text-base line-clamp-1 group-hover:text-primary transition-colors capitalize">
+                    {formatTitle(property)}
                 </h3>
                 <p className="text-sm text-text-secondary mt-1 line-clamp-1">
                     {property.address}, {property.city}

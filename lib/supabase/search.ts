@@ -57,6 +57,7 @@ export async function searchProperties(
         p_bedrooms: filters.bedrooms ?? null,
         p_listing_type: filters.listing_type ?? null,
         p_property_type: filters.property_type ?? null,
+        p_subtype: filters.subtype ?? null,
         p_is_verified: filters.is_verified ?? null,
         p_agent_id: filters.agentId ?? null,
         p_limit: limit,

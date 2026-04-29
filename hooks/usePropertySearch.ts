@@ -39,6 +39,7 @@ export function usePropertySearch(): UsePropertySearchReturn {
             return undefined;
         })(),
         property_type: searchParams.get("category") || undefined,
+        subtype: searchParams.get("subtype") || undefined,
         bedrooms: searchParams.get("bedrooms")
             ? Number(searchParams.get("bedrooms"))
             : undefined,
@@ -53,6 +54,33 @@ export function usePropertySearch(): UsePropertySearchReturn {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(0);
+
+    const searchParamsString = searchParams.toString();
+
+    // Sync external URL changes (e.g. clicking header links) to internal filters
+    useEffect(() => {
+        setFilters({
+            city: searchParams.get("location") || undefined,
+            cityId: searchParams.get("cityId") || undefined,
+            stateId: searchParams.get("stateId") || undefined,
+            localityId: searchParams.get("localityId") || undefined,
+            listing_type: (() => {
+                const t = searchParams.get("type");
+                if (t === "buy") return "sell";
+                if (t === "rent") return "rent";
+                return undefined;
+            })(),
+            property_type: searchParams.get("category") || undefined,
+            subtype: searchParams.get("subtype") || undefined,
+            bedrooms: searchParams.get("bedrooms")
+                ? Number(searchParams.get("bedrooms"))
+                : undefined,
+            is_verified: searchParams.get("verified") === "true" ? true : undefined,
+            agentId: searchParams.get("agent") || undefined,
+            sort_by: "newest",
+        });
+        setPage(0);
+    }, [searchParams, searchParamsString]);
 
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);

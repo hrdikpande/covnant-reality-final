@@ -2,6 +2,7 @@ import { MapPin } from "lucide-react";
 import type { Property } from "@/types";
 import { useMemo } from "react";
 import { AREA_UNITS, AreaUnit, convertFromSqft } from "@/utils/areaConversion";
+import { formatPropertyTitle } from "@/lib/utils";
 
 interface PriceSectionProps {
     property: Property;
@@ -72,8 +73,8 @@ export function PriceSection({ property, displayUnit, setDisplayUnit }: PriceSec
 
             {/* Title & Location */}
             <div className="mb-5">
-                <h1 className="text-xl font-semibold text-text-primary leading-tight mb-1.5">
-                    {title}
+                <h1 className="text-xl font-semibold text-text-primary leading-tight mb-1.5 capitalize">
+                    {formatPropertyTitle(property)}
                 </h1>
                 <div className="flex items-start text-text-secondary gap-1.5">
                     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
