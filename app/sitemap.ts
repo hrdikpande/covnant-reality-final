@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 export const revalidate = 3600; // revalidate the sitemap every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.covenantreality.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.covnantreality.com'
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
