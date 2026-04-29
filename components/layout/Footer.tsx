@@ -54,11 +54,6 @@ export function Footer() {
                     <p className="text-sm text-text-muted">
                         © {new Date().getFullYear()} Covnant Reality India PVT LTD. All rights reserved.
                     </p>
-                    <div className="flex items-center gap-6">
-                        <span className="text-sm text-text-muted font-medium">
-                            Maintained by <a href="https://spotwebs.in/" target="_blank" rel="noopener noreferrer" className="font-bold text-[#d18a4a] hover:text-[#b4763e] transition-colors">SPOTWEBS</a>
-                        </span>
-                    </div>
                 </div>
             </div>
         </footer>
