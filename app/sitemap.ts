@@ -12,7 +12,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Provide fallback empty string if env vars are missing to avoid errors during build/dev
   const supabase = createClient(
     supabaseUrl || 'https://placeholder.supabase.co', 
-    supabaseKey || 'placeholder'
+    supabaseKey || 'placeholder',
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    }
   )
 
   let properties: any[] = []
