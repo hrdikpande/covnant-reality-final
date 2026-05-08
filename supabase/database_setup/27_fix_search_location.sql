@@ -1,11 +1,14 @@
 -- ==========================================
--- 26_SUBTYPE_SEARCH.SQL
--- Updates search_properties to filter by subtype
+-- 27_FIX_SEARCH_LOCATION.SQL
+-- Drops and recreates search_properties with
+-- locality + state in the return, and text types
 -- ==========================================
 
+-- Step 1: Drop the existing function (required to change return type)
 DROP FUNCTION IF EXISTS search_properties(text,uuid,uuid,uuid,numeric,numeric,integer,text,boolean,text,numeric,numeric,text,text,uuid,integer,integer,text);
 
-CREATE OR REPLACE FUNCTION search_properties(
+-- Step 2: Recreate with locality + state columns and text return types
+CREATE FUNCTION search_properties(
   p_city text DEFAULT NULL,
   p_city_id uuid DEFAULT NULL,
   p_state_id uuid DEFAULT NULL,
@@ -41,7 +44,9 @@ RETURNS TABLE (
   bathrooms int,
   furnishing text,
   address text,
+  locality text,
   city text,
+  state text,
   status text,
   is_verified boolean,
   is_featured boolean,
@@ -53,17 +58,18 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Hard cap limit to 50
   IF p_limit IS NULL OR p_limit > 50 THEN
     p_limit := 50;
   END IF;
 
   RETURN QUERY
   SELECT 
-    p.id, p.owner_id, p.title, p.description, p.listing_type::text, 
-    p.property_type::text, p.commercial_type, p.price, p.area_sqft, p.area_value, p.area_unit, p.bedrooms, p.bathrooms, 
-    p.furnishing::text, p.address, p.city, p.status::text, p.is_verified,
-    p.is_featured,
+    p.id, p.owner_id, p.title, p.description,
+    p.listing_type::text, p.property_type::text, p.commercial_type,
+    p.price, p.area_sqft, p.area_value, p.area_unit,
+    p.bedrooms, p.bathrooms, p.furnishing::text,
+    p.address, p.locality, p.city, p.state,
+    p.status::text, p.is_verified, p.is_featured,
     p.created_at,
     COUNT(*) OVER() as total_count
   FROM properties p
@@ -101,4 +107,3 @@ BEGIN
   OFFSET p_offset;
 END;
 $$;
-

@@ -179,7 +179,9 @@ export interface SearchProperty {
     bathrooms: number;
     furnishing: string | null;
     address: string;
+    locality: string | null;
     city: string;
+    state: string | null;
     status: string;
     is_verified: boolean;
     created_at: string;

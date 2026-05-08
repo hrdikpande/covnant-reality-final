@@ -85,7 +85,7 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
                     {formatTitle(property)}
                 </h3>
                 <p className="text-sm text-text-secondary mt-1 line-clamp-1">
-                    {property.address}, {property.city}
+                    {[property.locality || property.address, property.city, property.state].filter(Boolean).join(', ')}
                 </p>
 
                 <div className="flex items-center gap-3 mt-3 text-xs text-text-secondary">

@@ -158,7 +158,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
                     <div className="flex items-center gap-1 mt-1 text-text-secondary">
                         <MapPin className="h-3.5 w-3.5" />
                         <span className="text-xs truncate">
-                            {location}, {city}
+                            {[location, city, property.state].filter(Boolean).join(", ")}
                         </span>
                     </div>
 
