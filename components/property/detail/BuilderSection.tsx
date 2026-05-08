@@ -40,6 +40,7 @@ export function BuilderSection({ property }: BuilderSectionProps) {
                                 src={owner.avatar}
                                 alt={owner.name}
                                 fill
+                                sizes="64px"
                                 className="object-cover"
                             />
                         ) : (

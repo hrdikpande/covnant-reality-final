@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { generatePropertySlug } from "@/lib/slugify";
 
 /* ── Types ─────────────────────────────────────────────────── */
 
@@ -299,6 +300,24 @@ export async function submitProperty(
         );
     }
 
+    // 4. Generate and save SEO slug
+    try {
+        const slug = generatePropertySlug({
+            id: propertyId,
+            property_type: payload.property_type,
+            commercial_type: payload.commercial_type,
+            locality: payload.locality,
+            city: payload.city,
+            state: payload.state,
+        });
+        await supabase
+            .from("properties")
+            .update({ slug })
+            .eq("id", propertyId);
+    } catch {
+        // Non-critical — slug can be backfilled later
+    }
+
     return { propertyId, mediaCount: totalUploaded };
 }
 
@@ -362,6 +381,24 @@ export async function submitAdminProperty(
         throw new Error(
             "All media uploads failed. Property submission has been rolled back. Please try again."
         );
+    }
+
+    // 4. Generate and save SEO slug
+    try {
+        const slug = generatePropertySlug({
+            id: propertyId,
+            property_type: payload.property_type,
+            commercial_type: payload.commercial_type,
+            locality: payload.locality,
+            city: payload.city,
+            state: payload.state,
+        });
+        await supabase
+            .from("properties")
+            .update({ slug })
+            .eq("id", propertyId);
+    } catch {
+        // Non-critical — slug can be backfilled later
     }
 
     return { propertyId, mediaCount: totalUploaded };

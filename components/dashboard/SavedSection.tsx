@@ -71,7 +71,7 @@ export function SavedSection({ properties, loading }: SavedSectionProps) {
                                             ₹{p.price.toLocaleString("en-IN")}
                                         </span>
                                         <Link
-                                            href={`/property/${p.id}`}
+                                            href={`/property/${(p as typeof p & { slug?: string }).slug || p.id}`}
                                             className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
                                         >
                                             View →

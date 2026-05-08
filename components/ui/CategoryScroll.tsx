@@ -123,6 +123,7 @@ export function CategoryScroll() {
                                 src={cat.image}
                                 alt={cat.label}
                                 fill
+                                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
                                 className="object-cover transition-transform duration-500 lg:group-hover:scale-105"
                             />
                         </div>

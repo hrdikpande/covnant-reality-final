@@ -27,6 +27,7 @@ export function AgentCard({ agent, className }: AgentCardProps) {
                     src={agent.photo}
                     alt={agent.name}
                     fill
+                    sizes="96px"
                     className="object-cover rounded-full border-4 border-white shadow-md relative z-10 transition-transform duration-500 group-hover:scale-105"
                 />
             </div>

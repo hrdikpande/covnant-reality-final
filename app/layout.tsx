@@ -92,14 +92,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta name="google-site-verification" content="QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased bg-bg text-text-primary`}>
+      <body className={`${inter.variable} font-sans antialiased bg-bg text-text-primary`} suppressHydrationWarning>
         <ErrorBoundary>
           <AuthProvider>
             <LocationProvider>

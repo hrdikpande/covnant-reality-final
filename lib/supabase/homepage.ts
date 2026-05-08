@@ -52,6 +52,7 @@ interface PropertyRow {
     pincode: string | null;
     localities?: { latitude: number | null; longitude: number | null }[] | null;
     property_media?: { media_url: string; media_type: string }[] | null;
+    slug?: string | null;
 }
 
 export async function fetchCategoryCounts(city?: string): Promise<Record<string, number>> {
@@ -143,6 +144,7 @@ function mapRowToProperty(row: PropertyRow): Property {
         landmark: row.landmark ?? null,
         pincode: row.pincode ?? null,
         floorPlans: floorPlanUrls,
+        slug: row.slug ?? null,  // slug may not exist in DB; fallback to null
     };
 }
 

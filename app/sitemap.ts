@@ -28,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (supabaseUrl && supabaseKey) {
     const { data, error } = await supabase
       .from('properties')
-      .select('id, created_at')
+      .select('id, slug, created_at')
       .eq('status', 'approved')
       
     if (error) {
@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const propertyEntries: MetadataRoute.Sitemap = properties.map((property) => ({
-    url: `${baseUrl}/property/${property.id}`,
+    url: `${baseUrl}/property/${property.slug || property.id}`,
     lastModified: new Date(property.created_at),
     changeFrequency: 'weekly',
     priority: 0.8,

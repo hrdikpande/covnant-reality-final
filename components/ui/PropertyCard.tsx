@@ -68,7 +68,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
 
     return (
         <Link
-            href={`/property/${id}`}
+            href={`/property/${property.slug || id}`}
             className={cn(
                 "group bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 block",
                 className

@@ -32,6 +32,37 @@ export async function middleware(request: NextRequest) {
 
         const role = (user?.user_metadata?.role as UserRole) ?? null;
 
+        /* ─── 0. Property UUID → Slug redirect ───────────────────────── */
+        const uuidPropertyMatch = pathname.match(/^\/property\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+        if (uuidPropertyMatch) {
+            const propertyUuid = uuidPropertyMatch[1];
+            try {
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+                if (supabaseUrl && supabaseAnonKey) {
+                    const supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
+                        cookies: {
+                            getAll() { return request.cookies.getAll(); },
+                            setAll() { /* no-op */ },
+                        },
+                    });
+                    const { data } = await supabaseClient
+                        .from("properties")
+                        .select("slug")
+                        .eq("id", propertyUuid)
+                        .maybeSingle();
+
+                    if (data?.slug) {
+                        const slugUrl = request.nextUrl.clone();
+                        slugUrl.pathname = `/property/${data.slug}`;
+                        return NextResponse.redirect(slugUrl, 301);
+                    }
+                }
+            } catch {
+                // Fall through — let the page handle it
+            }
+        }
+
         /* ─── 1. Authenticated user visiting an auth page → redirect to home ── */
         if (user && AUTH_PAGES.some((p) => pathname.startsWith(p))) {
             const dashboardUrl = request.nextUrl.clone();

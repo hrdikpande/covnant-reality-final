@@ -133,7 +133,7 @@ export function OwnerPropertiesView() {
                                             <div className="flex items-center gap-4">
                                                 <div className="w-16 h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 relative">
                                                     {property.image ? (
-                                                        <Image src={property.image} alt={property.title} fill className="object-cover" />
+                                                        <Image src={property.image} alt={property.title} fill sizes="64px" className="object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-slate-400">No Img</div>
                                                     )}
@@ -157,7 +157,7 @@ export function OwnerPropertiesView() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Link href={`/property/${property.id}`} prefetch={false}>
+                                                <Link href={`/property/${(property as OwnerProperty & { slug?: string }).slug || property.id}`} prefetch={false}>
                                                     <button className="p-2 text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="View Details">
                                                         <Eye className="w-4 h-4" />
                                                     </button>

@@ -49,7 +49,7 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
 
     return (
         <Link
-            href={`/property/${property.id}`}
+            href={`/property/${property.slug || property.id}`}
             className="group bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col"
         >
             {/* Property Image */}

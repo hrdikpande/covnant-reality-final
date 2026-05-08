@@ -34,6 +34,7 @@ export interface Property {
     pricePerSqFt?: number | null;
     latitude?: number | null;
     longitude?: number | null;
+    slug?: string | null;
     pincode?: string | null;
 
     // Reviews
@@ -189,6 +190,7 @@ export interface SearchProperty {
     image_url?: string | null;
     commercial_type?: string | null;
     price_per_sqft?: number | null;
+    slug?: string | null;
 
     // Reviews
     rating?: number;

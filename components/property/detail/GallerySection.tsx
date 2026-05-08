@@ -78,6 +78,7 @@ export function GallerySection({ images, videos = [], verified, propertyId }: Ga
                                 src={media.src}
                                 alt={`Property image ${idx + 1}`}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 50vw"
                                 className="object-cover"
                                 priority={idx === 0}
                             />

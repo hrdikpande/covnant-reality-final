@@ -59,18 +59,27 @@ export function getRealEstateListingSchema(property: {
   latitude?: number | null;
   longitude?: number | null;
   city?: string;
+  state?: string;
   location?: string;
+  areaSqft?: number | null;
+  bedrooms?: number | null;
+  imageUrl?: string | null;
+  useSlugUrl?: boolean;
 }) {
+  const urlPath = property.useSlugUrl
+    ? `https://www.covnantreality.com/property/${property.id}`
+    : `https://www.covnantreality.com/property/${property.id}`;
+
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
     name: property.title,
     description: property.description,
-    url: `https://www.covnantreality.com/property/${property.id}`,
+    url: urlPath,
     address: {
       "@type": "PostalAddress",
       addressLocality: property.city || "Hyderabad",
-      addressRegion: "Telangana",
+      addressRegion: property.state || "Telangana",
       addressCountry: "IN",
       streetAddress: property.location || "",
     },
@@ -89,8 +98,24 @@ export function getRealEstateListingSchema(property: {
             "@type": "Offer",
             priceCurrency: "INR",
             price: property.price,
+            availability: "https://schema.org/InStock",
           },
         }
+      : {}),
+    ...(property.areaSqft
+      ? {
+          floorSize: {
+            "@type": "QuantitativeValue",
+            value: property.areaSqft,
+            unitCode: "FTK",
+          },
+        }
+      : {}),
+    ...(property.bedrooms
+      ? { numberOfRooms: property.bedrooms }
+      : {}),
+    ...(property.imageUrl
+      ? { image: property.imageUrl }
       : {}),
   };
 }

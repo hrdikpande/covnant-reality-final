@@ -24,27 +24,84 @@ import { DescriptionSection } from "@/components/property/detail/DescriptionSect
 import type { Property } from "@/types";
 import { AreaUnit } from "@/utils/areaConversion";
 import { useRouter } from "next/navigation";
+import { parsePropertySlug, isUUID } from "@/lib/slugify";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── View-tracking deduplication ────────────────────────────────────────────
 const VIEW_COOLDOWN_MS = 10 * 60 * 1000;
 const pendingViews = new Set<string>();
 
-export function PropertyDetailClient({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = React.use(params);
+/**
+ * Resolve a slug to a property UUID.
+ * - If slug is a UUID, return as-is.
+ * - Otherwise, query the DB by slug or short ID prefix.
+ */
+async function resolveSlugToId(slug: string): Promise<string | null> {
+    if (isUUID(slug)) return slug;
+
+    const supabase = createClient();
+
+    // Try exact slug match
+    const { data: bySlug } = await supabase
+        .from("properties")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+    if (bySlug) return bySlug.id;
+
+    // Fallback: short ID prefix match
+    const { shortId } = parsePropertySlug(slug);
+    if (shortId && shortId.length >= 6) {
+        const { data: byPrefix } = await supabase
+            .from("properties")
+            .select("id")
+            .like("id", `${shortId.slice(0, 8)}%`)
+            .limit(1)
+            .maybeSingle();
+        if (byPrefix) return byPrefix.id;
+    }
+
+    return null;
+}
+
+export function PropertyDetailClient({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = React.use(params);
     const { user, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const trackedRef = useRef(false);
 
     const [property, setProperty] = useState<Property | null>(null);
     const [loading, setLoading] = useState(true);
+    const [propertyId, setPropertyId] = useState<string | null>(null);
     const [displayUnit, setDisplayUnit] = useState<AreaUnit>("Sq ft");
+
+    // ── Resolve slug → UUID ─────────────────────────────────────────────
+    useEffect(() => {
+        if (!slug) return;
+        let cancelled = false;
+
+        resolveSlugToId(slug).then((id) => {
+            if (!cancelled && id) {
+                setPropertyId(id);
+            } else if (!cancelled) {
+                setLoading(false); // No property found
+            }
+        });
+
+        return () => {
+            cancelled = true;
+            setPropertyId(null);
+            setProperty(null);
+            setLoading(true);
+        };
+    }, [slug]);
 
     // ── Fetch property from Supabase ───────────────────────────────────────
     useEffect(() => {
-        if (!id) return;
+        if (!propertyId) return;
         let cancelled = false;
-        // setLoading(true); // Removed to avoid lint error; loading is true by default
-        fetchPropertyById(id).then((data) => {
+        fetchPropertyById(propertyId).then((data) => {
             if (!cancelled) {
                 setProperty(data);
                 if (data?.area_unit) {
@@ -55,38 +112,35 @@ export function PropertyDetailClient({ params }: { params: Promise<{ id: string 
         });
         return () => {
             cancelled = true;
-            // Reset state for next ID to ensure loader shows if it changes
-            setProperty(null);
-            setLoading(true);
         };
-    }, [id]);
+    }, [propertyId]);
 
     // ── Record property view on mount ──────────────────────────────────────
     useEffect(() => {
-        if (!id) return;
+        if (!propertyId) return;
         if (trackedRef.current) return;
-        if (pendingViews.has(id)) return;
+        if (pendingViews.has(propertyId)) return;
 
-        const storageKey = `pv_${id}`;
+        const storageKey = `pv_${propertyId}`;
         try {
             const prev = sessionStorage.getItem(storageKey);
             if (prev && Date.now() - Number(prev) < VIEW_COOLDOWN_MS) return;
         } catch { /* proceed */ }
 
-        pendingViews.add(id);
+        pendingViews.add(propertyId);
         trackedRef.current = true;
         try { sessionStorage.setItem(storageKey, String(Date.now())); } catch { /* no-op */ }
 
-        recordPropertyView(id, user?.id ?? null);
-        return () => { pendingViews.delete(id); };
-    }, [id, user?.id]);
+        recordPropertyView(propertyId, user?.id ?? null);
+        return () => { pendingViews.delete(propertyId); };
+    }, [propertyId, user?.id]);
 
     // ── Redirect if not logged in ──────────────────────────────────────────
     useEffect(() => {
         if (!authLoading && !user) {
-            router.push(`/login?next=/property/${id}`);
+            router.push(`/login?next=/property/${slug}`);
         }
-    }, [user, authLoading, router, id]);
+    }, [user, authLoading, router, slug]);
 
     // ── Loading ────────────────────────────────────────────────────────────
     if (loading) {
