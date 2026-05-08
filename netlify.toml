@@ -20,6 +20,10 @@
   NODE_VERSION = "22"
   # Next.js telemetry opt-out for CI
   NEXT_TELEMETRY_DISABLED = "1"
+  # NEXT_PUBLIC_* vars are intentionally embedded in client-side bundles by Next.js.
+  # The Supabase anon key is designed to be public (Row-Level Security handles auth).
+  # Tell Netlify's secrets scanner to skip these keys.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
 
 # ──────────────────────────────────────────────────────────────
 # Environment variables (set these in Netlify UI → Site Settings → Environment)
