@@ -26,75 +26,91 @@ const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
 /* ── Middleware ─────────────────────────────────────────────────── */
 
 export async function middleware(request: NextRequest) {
-    const { user, supabaseResponse } = await updateSession(request);
-    const { pathname } = request.nextUrl;
+    try {
+        const { user, supabaseResponse } = await updateSession(request);
+        const { pathname } = request.nextUrl;
 
-    const role = (user?.user_metadata?.role as UserRole) ?? null;
+        const role = (user?.user_metadata?.role as UserRole) ?? null;
 
-    /* ─── 1. Authenticated user visiting an auth page → redirect to home ── */
-    if (user && AUTH_PAGES.some((p) => pathname.startsWith(p))) {
-        const dashboardUrl = request.nextUrl.clone();
-        dashboardUrl.pathname = '/';
-        return NextResponse.redirect(dashboardUrl);
-    }
-
-    /* ─── 2. Check protected routes ─────────────────────────────── */
-    for (const [prefix, allowedRoles] of Object.entries(PROTECTED_ROUTES)) {
-        if (!pathname.startsWith(prefix)) continue;
-
-        // 2a. Not authenticated → redirect to /login with ?next= param
-        if (!user) {
-            const loginUrl = request.nextUrl.clone();
-            loginUrl.pathname = "/login";
-            loginUrl.searchParams.set("next", pathname);
-            return NextResponse.redirect(loginUrl);
+        /* ─── 1. Authenticated user visiting an auth page → redirect to home ── */
+        if (user && AUTH_PAGES.some((p) => pathname.startsWith(p))) {
+            const dashboardUrl = request.nextUrl.clone();
+            dashboardUrl.pathname = '/';
+            return NextResponse.redirect(dashboardUrl);
         }
 
-        // 2b. Authenticated but role doesn't match → redirect to /
-        if (!role || !allowedRoles.includes(role)) {
-            const homeUrl = request.nextUrl.clone();
-            homeUrl.pathname = "/";
-            return NextResponse.redirect(homeUrl);
-        }
+        /* ─── 2. Check protected routes ─────────────────────────────── */
+        for (const [prefix, allowedRoles] of Object.entries(PROTECTED_ROUTES)) {
+            if (!pathname.startsWith(prefix)) continue;
 
-        // 2c. For /admin routes, do a secondary DB check to confirm the role
-        //     is actually 'admin' in the profiles table (guards against stale JWTs)
-        if (prefix === "/admin") {
-            const supabaseAdmin = createServerClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                {
-                    cookies: {
-                        getAll() {
-                            return request.cookies.getAll();
-                        },
-                        setAll() {
-                            // no-op in middleware verification — cookies are
-                            // already refreshed by updateSession above
-                        },
-                    },
-                }
-            );
+            // 2a. Not authenticated → redirect to /login with ?next= param
+            if (!user) {
+                const loginUrl = request.nextUrl.clone();
+                loginUrl.pathname = "/login";
+                loginUrl.searchParams.set("next", pathname);
+                return NextResponse.redirect(loginUrl);
+            }
 
-            const { data: profile } = await supabaseAdmin
-                .from("profiles")
-                .select("role")
-                .eq("id", user.id)
-                .maybeSingle();
-
-            if (!profile || profile.role !== "admin") {
+            // 2b. Authenticated but role doesn't match → redirect to /
+            if (!role || !allowedRoles.includes(role)) {
                 const homeUrl = request.nextUrl.clone();
                 homeUrl.pathname = "/";
                 return NextResponse.redirect(homeUrl);
             }
+
+            // 2c. For /admin routes, do a secondary DB check to confirm the role
+            //     is actually 'admin' in the profiles table (guards against stale JWTs)
+            if (prefix === "/admin") {
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+                if (!supabaseUrl || !supabaseAnonKey) {
+                    // Can't verify admin role without Supabase — deny access
+                    const homeUrl = request.nextUrl.clone();
+                    homeUrl.pathname = "/";
+                    return NextResponse.redirect(homeUrl);
+                }
+
+                const supabaseAdmin = createServerClient(
+                    supabaseUrl,
+                    supabaseAnonKey,
+                    {
+                        cookies: {
+                            getAll() {
+                                return request.cookies.getAll();
+                            },
+                            setAll() {
+                                // no-op in middleware verification — cookies are
+                                // already refreshed by updateSession above
+                            },
+                        },
+                    }
+                );
+
+                const { data: profile } = await supabaseAdmin
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (!profile || profile.role !== "admin") {
+                    const homeUrl = request.nextUrl.clone();
+                    homeUrl.pathname = "/";
+                    return NextResponse.redirect(homeUrl);
+                }
+            }
+
+            // 2d. Role matches → allow through (with refreshed cookies)
+            break;
         }
 
-        // 2d. Role matches → allow through (with refreshed cookies)
-        break;
+        /* ─── 3. All other routes: pass through with refreshed session ── */
+        return supabaseResponse;
+    } catch (error) {
+        console.error("[middleware] Unexpected error — falling through:", error);
+        // Fall through gracefully so the site remains accessible
+        return NextResponse.next();
     }
-
-    /* ─── 3. All other routes: pass through with refreshed session ── */
-    return supabaseResponse;
 }
 
 /* ── Matcher ───────────────────────────────────────────────────── */

@@ -9,8 +9,7 @@
   # Next.js outputs its build to .next (handled by Netlify's Next.js runtime)
   publish = ".next"
 
-  # Ignore builds if only non-code files changed (saves build minutes)
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':!README.md' ':!*.sql' ':!supabase/' ':!mock/' ':!*.mjs'"
+
 
 # ──────────────────────────────────────────────────────────────
 # Node.js version — match local dev environment
@@ -89,11 +88,3 @@
   to = "/google2815e16a85206310.html"
   status = 200
 
-# Catch-all fallback — let the Next.js runtime handle all unmatched routes
-# (including the custom app/not-found.tsx 404 page).
-# No Role condition — this site uses Supabase auth, not Netlify Identity.
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/___netlify-handler"
-  status = 200
-  force = false
