@@ -95,5 +95,4 @@
   from = "/*"
   to = "/.netlify/functions/___netlify-handler"
   status = 200
-  conditions = { Role = [""] }
   force = false
