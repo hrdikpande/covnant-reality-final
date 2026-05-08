@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-    title: 'About Us | Covnant Reality India PVT LTD',
-    description: 'Learn more about Covnant Reality India PVT LTD, your trusted destination for modern real estate solutions.',
-};
+export const metadata: Metadata = buildMetadata("about");
 
 export default function AboutPage() {
     return (

@@ -45,14 +45,75 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  // Standard routes
+  // ─── Static Routes ──────────────────────────────────────────────────────
   const routes: MetadataRoute.Sitemap = [
+    // Homepage — highest priority
     {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
     },
+
+    // ─── SEO Landing Pages (high priority) ────────────────────────────────
+    {
+      url: `${baseUrl}/commercial-property-hyderabad`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/residential-properties-hyderabad`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/warehouse-hyderabad`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/plots-land-hyderabad`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/property-management-hyderabad`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+
+    // ─── Blog ─────────────────────────────────────────────────────────────
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/commercial-properties-hyderabad-2026`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/blog/warehouses-rent-hyderabad`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/blog/residential-properties-under-50-lakhs`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+
+    // ─── Standard Pages ───────────────────────────────────────────────────
     {
       url: `${baseUrl}/about`,
       lastModified: new Date(),

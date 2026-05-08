@@ -56,29 +56,12 @@ interface PropertyRow {
 
 export async function fetchCategoryCounts(city?: string): Promise<Record<string, number>> {
     try {
-        // Query for ALL properties to debug if nothing is showing up
-        const { data: allData, error: allErr } = await supabase()
-            .from("properties")
-            .select("property_type, status, city");
-
-        if (allErr) {
-            console.error("[Homepage] fetchCategoryCounts debug error:", allErr.message);
-        } else {
-            console.log("[Homepage] Total properties in DB:", allData?.length || 0);
-            const statusCounts: Record<string, number> = {};
-            (allData as { property_type: string; status: string; city: string }[])?.forEach(p => {
-                statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
-            });
-            console.log("[Homepage] Property statuses:", statusCounts);
-        }
-
         let query = supabase()
             .from("properties")
             .select("property_type")
             .eq("status", "approved");
 
         if (city) {
-            // Use partial matching with wildcards to match the RPC behavior
             query = query.ilike("city", `%${city}%`);
         }
 
@@ -97,10 +80,9 @@ export async function fetchCategoryCounts(city?: string): Promise<Record<string,
             }
         });
 
-        console.log("[Homepage] Category counts fetched:", { city, counts });
         return counts;
     } catch (err) {
-        console.error("[Homepage] fetchCategoryCounts catch error:", err);
+        console.error("[Homepage] fetchCategoryCounts error:", err);
         return {};
     }
 }
@@ -181,6 +163,7 @@ export async function fetchOwnerProfile(ownerId: string): Promise<{ name: string
 
 // ─── Property Fetchers ──────────────────────────────────────────────────────
 
+/** Full select — used for detail page */
 const PROPERTY_SELECT = `
     id, owner_id, title, description, listing_type, property_type, commercial_type,
     price, area_sqft, area_value, area_unit, bedrooms, bathrooms,
@@ -188,6 +171,14 @@ const PROPERTY_SELECT = `
     address, locality, city, state, status, is_verified, is_featured, created_at,
     latitude, longitude, contact_number, whatsapp_number, amenities, allow_chat, landmark, pincode,
     localities ( latitude, longitude ),
+    property_media ( media_url, media_type )
+`;
+
+/** Lightweight select — used for homepage listing cards (no joins = faster) */
+const PROPERTY_CARD_SELECT = `
+    id, owner_id, title, listing_type, property_type, commercial_type,
+    price, area_sqft, area_value, area_unit, bedrooms, bathrooms,
+    address, locality, city, state, status, is_verified, is_featured, created_at,
     property_media ( media_url, media_type )
 `;
 
@@ -207,106 +198,131 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
 }
 
 export async function fetchPremiumProperties(limit = 6, city?: string): Promise<Property[]> {
-    let query = supabase()
-        .from("properties")
-        .select(PROPERTY_SELECT)
-        .eq("status", "approved")
-        .gt("price", 15000000);
+    try {
+        let query = supabase()
+            .from("properties")
+            .select(PROPERTY_CARD_SELECT)
+            .eq("status", "approved")
+            .gt("price", 15000000);
 
-    if (city) query = query.ilike("city", city);
+        if (city) query = query.ilike("city", city);
 
-    const { data, error } = await query
-        .order("price", { ascending: false })
-        .limit(limit);
+        const { data, error } = await query
+            .order("price", { ascending: false })
+            .limit(limit);
 
-    if (error) {
-        console.error("[Homepage] fetchPremiumProperties error:", error.message);
+        if (error) {
+            console.error("[Homepage] fetchPremiumProperties error:", error.message);
+            return [];
+        }
+
+        return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
+    } catch (err) {
+        console.error("[Homepage] fetchPremiumProperties catch:", err);
         return [];
     }
-
-    return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
 }
 
 export async function fetchVerifiedProperties(limit = 6, city?: string): Promise<Property[]> {
-    let query = supabase()
-        .from("properties")
-        .select(PROPERTY_SELECT)
-        .eq("status", "approved")
-        .eq("is_verified", true);
+    try {
+        let query = supabase()
+            .from("properties")
+            .select(PROPERTY_CARD_SELECT)
+            .eq("status", "approved")
+            .eq("is_verified", true);
 
-    if (city) query = query.ilike("city", city);
+        if (city) query = query.ilike("city", city);
 
-    const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .limit(limit);
+        const { data, error } = await query
+            .order("created_at", { ascending: false })
+            .limit(limit);
 
-    if (error) {
-        console.error("[Homepage] fetchVerifiedProperties error:", error.message);
+        if (error) {
+            console.error("[Homepage] fetchVerifiedProperties error:", error.message);
+            return [];
+        }
+
+        return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
+    } catch (err) {
+        console.error("[Homepage] fetchVerifiedProperties catch:", err);
         return [];
     }
-
-    return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
 }
 
 export async function fetchRecentProperties(limit = 8, city?: string): Promise<Property[]> {
-    let query = supabase()
-        .from("properties")
-        .select(PROPERTY_SELECT)
-        .eq("status", "approved");
+    try {
+        let query = supabase()
+            .from("properties")
+            .select(PROPERTY_CARD_SELECT)
+            .eq("status", "approved");
 
-    if (city) query = query.ilike("city", city);
+        if (city) query = query.ilike("city", city);
 
-    const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .limit(limit);
+        const { data, error } = await query
+            .order("created_at", { ascending: false })
+            .limit(limit);
 
-    if (error) {
-        console.error("[Homepage] fetchRecentProperties error:", error.message);
+        if (error) {
+            console.error("[Homepage] fetchRecentProperties error:", error.message);
+            return [];
+        }
+
+        return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
+    } catch (err) {
+        console.error("[Homepage] fetchRecentProperties catch:", err);
         return [];
     }
-
-    return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
 }
 
 export async function fetchAffordableRentals(limit = 6, city?: string): Promise<Property[]> {
-    let query = supabase()
-        .from("properties")
-        .select(PROPERTY_SELECT)
-        .eq("status", "approved")
-        .eq("listing_type", "rent");
+    try {
+        let query = supabase()
+            .from("properties")
+            .select(PROPERTY_CARD_SELECT)
+            .eq("status", "approved")
+            .eq("listing_type", "rent");
 
-    if (city) query = query.ilike("city", city);
+        if (city) query = query.ilike("city", city);
 
-    const { data, error } = await query
-        .order("price", { ascending: true })
-        .limit(limit);
+        const { data, error } = await query
+            .order("price", { ascending: true })
+            .limit(limit);
 
-    if (error) {
-        console.error("[Homepage] fetchAffordableRentals error:", error.message);
+        if (error) {
+            console.error("[Homepage] fetchAffordableRentals error:", error.message);
+            return [];
+        }
+
+        return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
+    } catch (err) {
+        console.error("[Homepage] fetchAffordableRentals catch:", err);
         return [];
     }
-
-    return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
 }
 
 export async function fetchRecommendedProperties(limit = 6, city?: string): Promise<Property[]> {
-    let query = supabase()
-        .from("properties")
-        .select(PROPERTY_SELECT)
-        .eq("status", "approved");
+    try {
+        let query = supabase()
+            .from("properties")
+            .select(PROPERTY_CARD_SELECT)
+            .eq("status", "approved");
 
-    if (city) query = query.ilike("city", city);
+        if (city) query = query.ilike("city", city);
 
-    const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .limit(limit);
+        const { data, error } = await query
+            .order("created_at", { ascending: false })
+            .limit(limit);
 
-    if (error) {
-        console.error("[Homepage] fetchRecommendedProperties error:", error.message);
+        if (error) {
+            console.error("[Homepage] fetchRecommendedProperties error:", error.message);
+            return [];
+        }
+
+        return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
+    } catch (err) {
+        console.error("[Homepage] fetchRecommendedProperties catch:", err);
         return [];
     }
-
-    return (data as unknown as PropertyRow[] ?? []).map(row => mapRowToProperty(row));
 }
 
 interface ProjectData {

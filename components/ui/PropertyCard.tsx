@@ -78,8 +78,10 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
             <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
                     src={image}
-                    alt={formatPropertyTitle(property)}
+                    alt={`${formatPropertyTitle(property)} in ${[location, city].filter(Boolean).join(", ")}`}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    loading="lazy"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 

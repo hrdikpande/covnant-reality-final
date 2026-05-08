@@ -31,7 +31,8 @@ export function Header() {
                                 alt="Covnant Reality Logo"
                                 width={144}
                                 height={48}
-                                className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                                className="object-contain transition-transform group-hover:scale-105"
+                                style={{ height: '3rem', width: 'auto' }}
                                 priority
                             />
                         </Link>

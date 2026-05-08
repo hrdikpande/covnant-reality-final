@@ -16,16 +16,73 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Covnant Reality India PVT LTD",
+  metadataBase: new URL("https://www.covnantreality.com"),
+  title: {
+    default: "Covnant Reality – Commercial & Residential Properties in Hyderabad",
+    template: "%s | Covnant Reality",
+  },
   description:
-    "Discover premium properties — apartments, villas, plots, and commercial spaces. Your trusted real estate marketplace.",
+    "Find the best commercial property, residential properties, warehouses, and plots in Hyderabad. Covnant Reality – Hyderabad's trusted real estate company.",
+  keywords: [
+    "commercial property hyderabad",
+    "residential properties hyderabad",
+    "warehouse in hyderabad",
+    "plots hyderabad",
+    "real estate hyderabad",
+    "office space hyderabad",
+    "flats in hyderabad",
+    "villas hyderabad",
+    "property in hyderabad",
+    "real estate company hyderabad",
+  ],
+  authors: [{ name: "Covnant Reality" }],
+  creator: "Covnant Reality",
+  publisher: "Covnant Reality",
   icons: {
-    icon: "/favicon.ico",
+    icon: [{ url: "/favicon.ico", sizes: "any" }],
     shortcut: "/favicon.ico",
-    apple: "/logo.png",
+    apple: "/apple-touch-icon.png",
   },
   verification: {
     google: "QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw",
+  },
+  alternates: {
+    canonical: "https://www.covnantreality.com",
+  },
+  openGraph: {
+    title: "Covnant Reality – Commercial & Residential Properties in Hyderabad",
+    description:
+      "Find the best commercial property, residential properties, warehouses, and plots in Hyderabad. Covnant Reality – Hyderabad's trusted real estate company.",
+    url: "https://www.covnantreality.com",
+    siteName: "Covnant Reality",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Covnant Reality – Commercial & Residential Properties in Hyderabad",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Covnant Reality – Commercial & Residential Properties in Hyderabad",
+    description:
+      "Find the best commercial property, residential properties, warehouses, and plots in Hyderabad.",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -35,8 +92,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head><meta name="google-site-verification" content="QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw" /></head>
+    <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        <meta name="google-site-verification" content="QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased bg-bg text-text-primary`}>
         <ErrorBoundary>
           <AuthProvider>

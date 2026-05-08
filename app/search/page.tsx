@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { SearchContent } from './SearchContent';
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-    title: 'Search Properties | Covnant Reality India PVT LTD',
-    description: 'Search and find your perfect property with Covnant Reality India PVT LTD.',
-};
+export const metadata: Metadata = buildMetadata("search");
 
 export default function SearchPage() {
     return (

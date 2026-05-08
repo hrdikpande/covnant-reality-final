@@ -58,7 +58,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                             alt="Covnant Reality Logo"
                             width={200}
                             height={64}
-                            className="h-16 w-auto object-contain"
+                            className="object-contain"
+                            style={{ height: '4rem', width: 'auto' }}
                             priority
                         />
                     </Link>
