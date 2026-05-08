@@ -89,11 +89,11 @@
   to = "/google2815e16a85206310.html"
   status = 200
 
-# SPA-style fallback — let Next.js handle all routing via middleware
-# (This is largely handled by the Next.js plugin, but explicit is safer)
+# Catch-all fallback — let the Next.js runtime handle all unmatched routes
+# (including the custom app/not-found.tsx 404 page).
+# No Role condition — this site uses Supabase auth, not Netlify Identity.
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/___netlify-handler"
   status = 200
-  conditions = { Role = [""] }
   force = false
