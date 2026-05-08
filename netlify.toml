@@ -1,0 +1,95 @@
+# ──────────────────────────────────────────────────────────────
+# Netlify Configuration — Covnant Reality (Next.js 16 + Supabase)
+# ──────────────────────────────────────────────────────────────
+
+[build]
+  # Build command — runs the standard Next.js production build
+  command = "npm ci && npm run build"
+
+  # Next.js outputs its build to .next (handled by Netlify's Next.js runtime)
+  publish = ".next"
+
+  # Ignore builds if only non-code files changed (saves build minutes)
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':!README.md' ':!*.sql' ':!supabase/' ':!mock/' ':!*.mjs'"
+
+# ──────────────────────────────────────────────────────────────
+# Node.js version — match local dev environment
+# ──────────────────────────────────────────────────────────────
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Next.js telemetry opt-out for CI
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# ──────────────────────────────────────────────────────────────
+# Environment variables (set these in Netlify UI → Site Settings → Environment)
+#
+#   NEXT_PUBLIC_SUPABASE_URL       = https://your-project.supabase.co
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY  = eyJ...
+#   NEXT_PUBLIC_BASE_URL           = https://www.covnantreality.com
+#
+# Do NOT commit real secrets here — use Netlify's dashboard.
+# ──────────────────────────────────────────────────────────────
+
+# ──────────────────────────────────────────────────────────────
+# Netlify Next.js Runtime Plugin (auto-detected, but explicit is better)
+# Handles SSR, middleware, API routes, ISR, and dynamic routes
+# ──────────────────────────────────────────────────────────────
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ──────────────────────────────────────────────────────────────
+# Custom headers — security & caching
+# ──────────────────────────────────────────────────────────────
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
+    X-XSS-Protection = "1; mode=block"
+
+# Cache static assets aggressively (Next.js hashed filenames ensure cache-busting)
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache images from public folder
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+# Cache favicon & logo
+[[headers]]
+  for = "/*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/logo.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# ──────────────────────────────────────────────────────────────
+# Redirects — handle common patterns
+# ──────────────────────────────────────────────────────────────
+
+# Google Search Console verification file (already in /public)
+[[redirects]]
+  from = "/google2815e16a85206310.html"
+  to = "/google2815e16a85206310.html"
+  status = 200
+
+# SPA-style fallback — let Next.js handle all routing via middleware
+# (This is largely handled by the Next.js plugin, but explicit is safer)
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/___netlify-handler"
+  status = 200
+  conditions = { Role = [""] }
+  force = false
