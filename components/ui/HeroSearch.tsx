@@ -7,7 +7,8 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/AuthContext";
-import { SearchLocationResult, searchLocations } from "@/lib/api/locations";
+import { SearchLocationResult, searchLocations, getPropertyLocations, PropertyLocationSuggestion } from "@/lib/api/locations";
+import { extractLocationRoot } from "@/lib/locationUtils";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -263,6 +264,14 @@ export function HeroSearch() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Property locations ordered by count (for showing popular locations)
+    const [propertyLocations, setPropertyLocations] = useState<PropertyLocationSuggestion[]>([]);
+
+    // Load property locations on mount (cached, so cheap after first call)
+    useEffect(() => {
+        getPropertyLocations().then(setPropertyLocations).catch(() => {});
+    }, []);
+
     useEffect(() => {
         const fetchSuggestions = async () => {
             // If user just selected an item, don't re-fetch
@@ -273,14 +282,37 @@ export function HeroSearch() {
                 return;
             }
             setLoadingSuggestions(true);
-            const res = await searchLocations(location);
-            setSuggestions(res);
+
+            // Fetch structured autocomplete results
+            const structuredRes = await searchLocations(location);
+
+            // Also filter property locations by the typed text
+            const query = location.trim().toLowerCase();
+            const matchingPropertyLocs = propertyLocations
+                .filter(pl => pl.location.toLowerCase().includes(query))
+                .slice(0, 8);
+
+            // Convert property locations to SearchLocationResult format
+            // and merge with structured results, avoiding duplicates
+            const structuredNames = new Set(structuredRes.map(r => r.name.toLowerCase()));
+            const propertyLocResults: SearchLocationResult[] = matchingPropertyLocs
+                .filter(pl => !structuredNames.has(pl.location.toLowerCase()))
+                .map(pl => ({
+                    id: `prop-loc-${pl.location}`,
+                    name: pl.location,
+                    type: 'locality' as const,
+                    parentName: `${pl.property_count} properties`,
+                }));
+
+            // Property-count results first, then structured results
+            const merged = [...propertyLocResults, ...structuredRes];
+            setSuggestions(merged);
             setIsDropdownOpen(true);
             setLoadingSuggestions(false);
         };
         const timeoutId = setTimeout(fetchSuggestions, 300);
         return () => clearTimeout(timeoutId);
-    }, [location, selectedLocation]);
+    }, [location, selectedLocation, propertyLocations]);
 
     const handleSearch = () => {
         if (activeTab === "sell") {
@@ -298,13 +330,8 @@ export function HeroSearch() {
         if (sub) params.set("subtype", sub.toLowerCase().replace(/[/&,\s]+/g, "-"));
 
         if (selectedLocation) {
-            if (selectedLocation.type === 'city') {
-                params.set("cityId", selectedLocation.id);
-                params.set("location", selectedLocation.name.toLowerCase());
-            } else {
-                params.set("localityId", selectedLocation.id);
-                params.set("location", selectedLocation.name.toLowerCase());
-            }
+            // Pass the location name for fuzzy text matching (root word extracted in search layer)
+            params.set("location", selectedLocation.name.toLowerCase());
         } else if (location.trim()) {
             params.set("location", location.trim().toLowerCase());
         }

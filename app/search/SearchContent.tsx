@@ -9,7 +9,16 @@ import { FilterContent } from '@/components/ui/FilterContent';
 import { useState, useRef, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPropertyTitle } from '@/lib/utils';
+import { isCorruptedLocation } from '@/lib/locationUtils';
 import type { SearchProperty, SearchFilters } from '@/types';
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/** Returns a clean location string, skipping corrupted locality values */
+function getCleanLocation(locality: string | null, address: string): string {
+    if (!isCorruptedLocation(locality)) return locality!;
+    return address || "";
+}
 
 // ─── Property Card for search results ───────────────────────────────────────
 
@@ -85,7 +94,7 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
                     {formatTitle(property)}
                 </h3>
                 <p className="text-sm text-text-secondary mt-1 line-clamp-1">
-                    {[property.locality || property.address, property.city, property.state].filter(Boolean).join(', ')}
+                    {[getCleanLocation(property.locality, property.address), property.city, property.state].filter(Boolean).join(', ')}
                 </p>
 
                 <div className="flex items-center gap-3 mt-3 text-xs text-text-secondary">

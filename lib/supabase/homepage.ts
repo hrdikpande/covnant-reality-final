@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { isCorruptedLocation } from "@/lib/locationUtils";
 import type { Property, Project, Agent, PropertyType } from "@/types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ function mapRowToProperty(row: PropertyRow): Property {
         title: row.title || "Untitled Property",
         description: row.description || "",
         price: row.price ?? 0,
-        location: row.locality || row.address || "",
+        location: (!isCorruptedLocation(row.locality) ? row.locality : null) || row.address || "",
         city: row.city || "",
         state: row.state || "",
         bedrooms: row.bedrooms ?? 0,

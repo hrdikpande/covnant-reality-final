@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { isCorruptedLocation } from "@/lib/locationUtils";
 
 export interface State {
     id: string;
@@ -168,6 +169,63 @@ export async function searchLocations(query: string): Promise<SearchLocationResu
             });
         }
     }
+
+    return results;
+}
+
+// ─── Property Location Suggestions (ordered by count) ───────────────────────
+
+export interface PropertyLocationSuggestion {
+    location: string;       // the raw location string from DB
+    property_count: number; // how many approved properties have this location
+}
+
+// In-memory cache for property locations
+let propertyLocationsCache: PropertyLocationSuggestion[] | null = null;
+let propertyLocationsCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetch distinct locality values from the properties table, ordered by count descending.
+ * Returns ALL variants (Medchal, Medchal Road, etc.) with their property counts.
+ * Locations with more properties appear first in the dropdown.
+ */
+export async function getPropertyLocations(): Promise<PropertyLocationSuggestion[]> {
+    // Return cached data if fresh
+    if (propertyLocationsCache && (Date.now() - propertyLocationsCacheTime) < CACHE_TTL_MS) {
+        return propertyLocationsCache;
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from("properties")
+        .select("locality")
+        .eq("status", "approved")
+        .not("locality", "is", null);
+
+    if (error) {
+        console.error("[Locations] getPropertyLocations error:", error.message);
+        return propertyLocationsCache || [];
+    }
+
+    if (!data) return [];
+
+    // Group by locality and count occurrences
+    const countMap: Record<string, number> = {};
+    for (const row of data) {
+        const loc = (row.locality as string)?.trim();
+        if (!loc || isCorruptedLocation(loc)) continue;
+        countMap[loc] = (countMap[loc] || 0) + 1;
+    }
+
+    // Convert to array and sort by count descending
+    const results = Object.entries(countMap)
+        .map(([location, property_count]) => ({ location, property_count }))
+        .sort((a, b) => b.property_count - a.property_count);
+
+    // Cache the results
+    propertyLocationsCache = results;
+    propertyLocationsCacheTime = Date.now();
 
     return results;
 }

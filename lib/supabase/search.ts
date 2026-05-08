@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { extractLocationRoot } from "@/lib/locationUtils";
 import type { SearchProperty, SearchFilters } from "@/types";
 
 export interface SearchResponse {
@@ -49,11 +50,17 @@ export async function searchProperties(
 ): Promise<SearchResponse> {
     const supabase = createClient();
 
+    // Extract root word from location for fuzzy ILIKE matching.
+    // e.g. "Medchal, Hyderabad" → "medchal" → matches all Medchal variants.
+    // We deliberately skip ID-based filters (cityId, localityId, stateId)
+    // so that ALL location variants return results.
+    const locationRoot = filters.city ? extractLocationRoot(filters.city) : null;
+
     const { data, error } = await supabase.rpc("search_properties", {
-        p_city: filters.city ?? null,
-        p_city_id: filters.cityId ?? null,
-        p_state_id: filters.stateId ?? null,
-        p_locality_id: filters.localityId ?? null,
+        p_city: locationRoot,
+        p_city_id: null,
+        p_state_id: null,
+        p_locality_id: null,
         p_bedrooms: filters.bedrooms ?? null,
         p_listing_type: filters.listing_type ?? null,
         p_property_type: filters.property_type ?? null,
