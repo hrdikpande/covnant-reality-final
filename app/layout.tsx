@@ -45,6 +45,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw",
+    other: {
+      "msvalidate.01": "2E4D98900ECB345C872D5A82A49DCD46",
+    },
   },
   alternates: {
     canonical: "https://www.covnantreality.com",
@@ -95,6 +98,7 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta name="google-site-verification" content="QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw" />
+        <meta name="msvalidate.01" content="2E4D98900ECB345C872D5A82A49DCD46" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
