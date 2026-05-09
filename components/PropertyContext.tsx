@@ -30,7 +30,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             .eq("user_id", uid);
 
         if (!error && data) {
-            setSavedProperties(data.map((row) => row.property_id));
+            setSavedProperties(data.map((row: { property_id: string }) => row.property_id));
         }
     }, []);
 
@@ -38,7 +38,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         const supabase = createClient();
 
         // Get the current session immediately
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getUser().then(({ data }: { data: { user: any } }) => {
+            const user = data.user;
             if (user) {
                 setUserId(user.id);
                 loadSavedProperties(user.id);
@@ -46,7 +47,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         });
 
         // Listen for auth state changes (login / logout)
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: listener } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
             const user = session?.user ?? null;
             setUserId(user?.id ?? null);
             if (user) {

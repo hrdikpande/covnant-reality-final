@@ -20,7 +20,7 @@ export function FeaturedProjectCard({ project, className }: FeaturedProjectCardP
     return (
         <Link href={`/search?project=${project.id}`} className={cn("group bg-white rounded-3xl border border-border shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 block", className)}>
             <div className="relative aspect-[16/9] overflow-hidden">
-                <Image src={project.image} alt={project.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                <Image src={typeof project.image === 'string' && project.image.length > 0 ? project.image : "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1000&auto=format&fit=crop"} alt={project.name || "Project"} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute top-4 left-4 flex gap-2">
                     <Badge variant="default" className="bg-black/70 backdrop-blur-md text-white shadow-sm border-0 font-medium px-3 py-1">
                         RERA: {project.reraBadge}

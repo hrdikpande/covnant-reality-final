@@ -133,7 +133,7 @@ export function OwnerPropertiesView() {
                                             <div className="flex items-center gap-4">
                                                 <div className="w-16 h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 relative">
                                                     {property.image ? (
-                                                        <Image src={property.image} alt={property.title} fill sizes="64px" className="object-cover" />
+                                                        <Image src={typeof property.image === 'string' && property.image.length > 0 ? property.image : "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1000&auto=format&fit=crop"} alt={property.title || "Property"} fill sizes="64px" className="object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-slate-400">No Img</div>
                                                     )}

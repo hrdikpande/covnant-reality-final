@@ -63,7 +63,7 @@ export async function GET() {
 
     // Aggregate trends by last 7 days
     const getLast7Days = () => {
-        const days = [];
+        const days: string[] = [];
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);

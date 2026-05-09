@@ -60,7 +60,7 @@ serve(async (req: Request) => {
     }
 
     const propertyId = rpcData.property_id
-    const uploadedMedia = []
+    const uploadedMedia: string[] = []
 
     // 5. Handle File Uploads to Storage
     for (const file of files) {

@@ -50,9 +50,9 @@ export default function NewBlogPage() {
 
     // Filter properties
     const filteredProperties = properties.filter(p => 
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.type.toLowerCase().includes(searchQuery.toLowerCase())
+        (p?.title || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+        (p?.city || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+        (p?.type || "").toLowerCase().includes((searchQuery || "").toLowerCase())
     );
 
     const handlePropertyToggle = (property: Property) => {
@@ -98,8 +98,8 @@ export default function NewBlogPage() {
 
         setUploading(true);
         const fileExt = file.name.split('.').pop();
-        const fileName = \`\${Math.random()}.\${fileExt}\`;
-        const filePath = \`blogs/\${fileName}\`;
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `blogs/${fileName}`;
 
         const { data, error } = await supabase.storage
             .from('property-media')
@@ -216,13 +216,16 @@ export default function NewBlogPage() {
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4">
+                            {filteredProperties.length === 0 && <div className="col-span-2 text-center py-10 text-xl font-bold text-red-500">No properties found in database!</div>}
                             {filteredProperties.map(p => (
                                 <div 
                                     key={p.id} 
                                     onClick={() => handlePropertyToggle(p)}
-                                    className={`cursor-pointer border-2 rounded-xl overflow-hidden ${selectedProperties.some(sp => sp.id === p.id) ? 'border-primary shadow-md' : 'border-transparent'}`}
+                                    className={`cursor-pointer border-2 rounded-xl p-4 ${selectedProperties.some(sp => sp.id === p.id) ? 'border-primary bg-blue-50' : 'border-slate-300 bg-white'}`}
                                 >
-                                    <PropertyCard property={p} />
+                                    <h3 className="font-bold text-lg text-black">{p.title || "No Title"}</h3>
+                                    <p className="text-sm text-slate-500">{p.city || "No City"}</p>
+                                    <p className="text-sm font-semibold mt-2">Price: {p.price || "N/A"}</p>
                                 </div>
                             ))}
                         </div>
@@ -388,27 +391,27 @@ export default function NewBlogPage() {
                     <div className="space-y-4 mb-10">
                         <CheckItem 
                             label="Title length (50-60 chars)" 
-                            passed={generatedBlog.metaTitle.length >= 50 && generatedBlog.metaTitle.length <= 60} 
-                            value={\`\${generatedBlog.metaTitle.length} chars\`} 
+                            passed={(generatedBlog?.metaTitle?.length || 0) >= 50 && (generatedBlog?.metaTitle?.length || 0) <= 60} 
+                            value={`${generatedBlog?.metaTitle?.length || 0} chars`} 
                         />
                         <CheckItem 
                             label="Meta description length (120-160 chars)" 
-                            passed={generatedBlog.metaDescription.length >= 120 && generatedBlog.metaDescription.length <= 160} 
-                            value={\`\${generatedBlog.metaDescription.length} chars\`} 
+                            passed={(generatedBlog?.metaDescription?.length || 0) >= 120 && (generatedBlog?.metaDescription?.length || 0) <= 160} 
+                            value={`${generatedBlog?.metaDescription?.length || 0} chars`} 
                         />
                         <CheckItem 
                             label="Focus keyword in title" 
-                            passed={generatedBlog.metaTitle.toLowerCase().includes(keyword.toLowerCase())} 
+                            passed={(generatedBlog?.metaTitle || "").toLowerCase().includes((keyword || "").toLowerCase())} 
                         />
                         <CheckItem 
                             label="Word count > 800" 
-                            passed={generatedBlog.wordCount >= 800} 
-                            value={\`\${generatedBlog.wordCount} words\`} 
+                            passed={(generatedBlog?.wordCount || 0) >= 800} 
+                            value={`${generatedBlog?.wordCount || 0} words`} 
                         />
                         <CheckItem 
                             label="Properties linked" 
                             passed={selectedProperties.length > 0} 
-                            value={\`\${selectedProperties.length} properties\`} 
+                            value={`${selectedProperties.length} properties`} 
                         />
                         <CheckItem 
                             label="Images have alt text" 
@@ -427,7 +430,7 @@ export default function NewBlogPage() {
                             <button 
                                 onClick={() => handlePublish('published')} 
                                 className="bg-primary text-white px-8 py-2.5 rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={generatedBlog.seoScore < 60 || (images.length > 0 && images.some(img => !img.alt.trim()))}
+                                disabled={(generatedBlog?.seoScore || 0) < 60 || (images.length > 0 && images.some(img => !img.alt.trim()))}
                             >
                                 Publish Blog
                             </button>

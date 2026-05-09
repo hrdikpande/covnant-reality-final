@@ -117,9 +117,9 @@ export function generateBlog({ properties, rawContent, keyword, tone }: Generate
     if (properties.length > 0) {
         contentHtml += `<h2>Featured Properties</h2>\n`;
         properties.forEach(prop => {
-            const propUrl = \`/property/\${prop.slug || prop.id}\`;
+            const propUrl = `/property/${prop.slug || prop.id}`;
             contentHtml += `<h3>${prop.title}</h3>\n`;
-            contentHtml += `<p>Located in ${prop.locality || prop.city}, this stunning ${prop.type} is an exceptional opportunity. You can explore more details about <a href="\${propUrl}">${prop.title}</a> right now.</p>\n`;
+            contentHtml += `<p>Located in ${prop.location || prop.city}, this stunning ${prop.type} is an exceptional opportunity. You can explore more details about <a href="${propUrl}">${prop.title}</a> right now.</p>\n`;
             if (prop.price > 0) {
                 contentHtml += `<p>Priced at ₹${prop.price.toLocaleString('en-IN')}, it offers excellent value.</p>\n`;
             }

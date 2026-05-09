@@ -56,7 +56,8 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
     }, []);
 
     // Format price helper
-    const formatPrice = (price: number) => {
+    const formatPrice = (price?: number | null) => {
+        if (!price || price === 0) return "Price on Request";
         if (price >= 10000000) {
             return `₹${(price / 10000000).toFixed(2)} Cr`;
         }
@@ -77,7 +78,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
             {/* Image Container */}
             <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
-                    src={image}
+                    src={typeof image === 'string' && image.length > 0 ? image : "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1000&auto=format&fit=crop"}
                     alt={`${formatPropertyTitle(property)} in ${[location, city].filter(Boolean).join(", ")}`}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

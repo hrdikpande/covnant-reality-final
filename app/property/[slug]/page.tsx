@@ -157,8 +157,8 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   }
 
   // Fetch property data for JSON-LD (best-effort, non-blocking)
-  let schemaData = null;
-  let breadcrumbData = null;
+  let schemaData: any = null;
+  let breadcrumbData: any = null;
   let propertyData: { id: string; property_type?: string | null; commercial_type?: string | null; locality?: string | null; city?: string | null; state?: string | null } | null = null;
 
   try {

@@ -32,7 +32,7 @@ async function getBlogData(slug: string) {
         .select("property_id")
         .eq("blog_id", blog.id);
 
-    let properties = [];
+    let properties: any[] = [];
     if (bpData && bpData.length > 0) {
         const propertyIds = bpData.map(bp => bp.property_id);
         const { data: propData } = await supabase

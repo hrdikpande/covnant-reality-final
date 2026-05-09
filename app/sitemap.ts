@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (supabaseUrl && supabaseKey) {
     const { data, error } = await supabase
       .from('properties')
-      .select('id, slug, created_at')
+      .select('id, created_at')
       .eq('status', 'approved')
       
       if (error) {

@@ -56,8 +56,9 @@ export async function getStates(): Promise<State[]> {
         return [];
     }
 
-    cache.states = data || [];
-    return cache.states;
+    const result = data || [];
+    cache.states = result;
+    return result;
 }
 
 /**
@@ -78,8 +79,9 @@ export async function getCitiesByState(stateId: string): Promise<City[]> {
         return [];
     }
 
-    cache.citiesByState[stateId] = data || [];
-    return cache.citiesByState[stateId];
+    const result = data || [];
+    cache.citiesByState[stateId] = result;
+    return result;
 }
 
 /**
@@ -100,8 +102,9 @@ export async function getLocalitiesByCity(cityId: string): Promise<Locality[]> {
         return [];
     }
 
-    cache.localitiesByCity[cityId] = data || [];
-    return cache.localitiesByCity[cityId];
+    const result = data || [];
+    cache.localitiesByCity[cityId] = result;
+    return result;
 }
 
 export interface SearchLocationResult {
