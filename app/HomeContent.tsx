@@ -37,7 +37,7 @@ export function HomeContent() {
       {/* 6. Verified Properties */}
       <VerifiedProperties />
 
-      {/* 7. Affordable Rentals & PG */}
+      {/* 7. Affordable Rentals */}
       <AffordableRentals />
 
       {/* 8. Featured Projects */}

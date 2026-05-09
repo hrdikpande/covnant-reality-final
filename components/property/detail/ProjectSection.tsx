@@ -11,7 +11,7 @@ export function ProjectSection({ property }: ProjectSectionProps) {
     // If the property has no possession or project context, skip the section
     if (!possessionStatus && !city) return null;
 
-    const isResidential = ["apartment", "villa", "house", "pg"].includes(type);
+    const isResidential = ["apartment", "villa", "house"].includes(type);
 
     return (
         <section className="py-6 border-b border-border bg-bg-card">

@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   )
 
   let properties: any[] = []
+  let blogs: any[] = []
 
   // Only fetch if we have valid supabase credentials
   if (supabaseUrl && supabaseKey) {
@@ -31,16 +32,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('id, slug, created_at')
       .eq('status', 'approved')
       
-    if (error) {
+      if (error) {
       console.error('Error fetching properties for sitemap:', error)
     } else if (data) {
       properties = data
+    }
+
+    const { data: blogData, error: blogError } = await supabase
+      .from('blogs')
+      .select('slug, published_at, updated_at')
+      .eq('status', 'published')
+
+    if (blogError) {
+      console.error('Error fetching blogs for sitemap:', blogError)
+    } else if (blogData) {
+      blogs = blogData
     }
   }
 
   const propertyEntries: MetadataRoute.Sitemap = properties.map((property) => ({
     url: `${baseUrl}/property/${property.slug || property.id}`,
     lastModified: new Date(property.created_at),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }))
+
+  const blogEntries: MetadataRoute.Sitemap = blogs.map((blog) => ({
+    url: `${baseUrl}/blog/${blog.slug}`,
+    lastModified: new Date(blog.updated_at || blog.published_at),
     changeFrequency: 'weekly',
     priority: 0.8,
   }))
@@ -94,24 +113,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    {
-      url: `${baseUrl}/blog/commercial-properties-hyderabad-2026`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/blog/warehouses-rent-hyderabad`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/blog/residential-properties-under-50-lakhs`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
 
     // ─── Standard Pages ───────────────────────────────────────────────────
     {
@@ -152,5 +153,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  return [...routes, ...propertyEntries]
+  return [...routes, ...propertyEntries, ...blogEntries]
 }

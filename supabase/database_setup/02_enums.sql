@@ -8,7 +8,7 @@ CREATE TYPE user_role AS ENUM ('buyer', 'tenant', 'owner', 'agent', 'builder', '
 
 -- Properties
 CREATE TYPE property_listing_type AS ENUM ('sell', 'rent');
-CREATE TYPE property_type_category AS ENUM ('apartment', 'villa', 'house', 'plot', 'commercial', 'pg');
+CREATE TYPE property_type_category AS ENUM ('apartment', 'villa', 'house', 'plot', 'commercial');
 CREATE TYPE furnishing_status AS ENUM ('furnished', 'semi_furnished', 'unfurnished');
 CREATE TYPE property_status AS ENUM ('pending', 'approved', 'rejected', 'sold', 'rented');
 

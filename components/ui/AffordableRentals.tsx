@@ -40,7 +40,7 @@ export function AffordableRentals() {
             <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-xl sm:text-2xl font-semibold text-text-primary">
-                        Affordable Rentals &amp; PG
+                        Affordable Rentals
                     </h2>
                     <p className="text-sm md:text-base text-slate-500 mt-1">
                         Move in ready homes{selectedCity ? ` in ${selectedCity}` : ""}

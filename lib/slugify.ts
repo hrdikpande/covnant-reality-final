@@ -45,7 +45,7 @@ function getTypeLabel(propertyType: string): string {
     case "house":
     case "villa":
     case "plot":
-    case "pg":
+
       return "residential";
     default:
       return type || "property";
@@ -65,7 +65,7 @@ function getSubtypeLabel(propertyType: string, commercialType?: string | null): 
   }
 
   // For residential types, the property_type IS the subtype
-  if (["apartment", "house", "villa", "plot", "pg"].includes(type)) {
+  if (["apartment", "house", "villa", "plot"].includes(type)) {
     return type;
   }
 

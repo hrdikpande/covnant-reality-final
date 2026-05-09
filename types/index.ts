@@ -67,8 +67,7 @@ export type PropertyBadge =
     | "hot"
     | "price-drop"
     | "sold"
-    | "rent"
-    | "pg";
+    | "rent";
 
 // ─── UI Component Types ─────────────────────────────────────────────────────
 
@@ -223,4 +222,45 @@ export interface PropertyReview {
 
     // Joined field from auth.users (usually mapped by the client)
     user_name?: string;
+}
+
+// ─── Blog Types ─────────────────────────────────────────────────────────────
+
+export type BlogStatus = "draft" | "published";
+
+export interface Blog {
+    id: string;
+    title: string;
+    slug: string;
+    meta_title: string | null;
+    meta_description: string | null;
+    content: string;
+    excerpt: string | null;
+    focus_keyword: string | null;
+    keywords: string[] | null;
+    status: BlogStatus;
+    published_at: string | null;
+    created_at: string;
+    updated_at: string;
+    og_image: string | null;
+    word_count: number;
+    reading_time: number;
+    seo_score: number;
+    schema_markup: any | null; // JSONB
+}
+
+export interface BlogProperty {
+    blog_id: string;
+    property_id: string;
+    anchor_text: string | null;
+}
+
+export interface BlogImage {
+    id: string;
+    blog_id: string;
+    url: string;
+    alt_text: string;
+    caption: string | null;
+    width: number | null;
+    height: number | null;
 }

@@ -44,13 +44,7 @@ const initialCategories: Category[] = [
         count: "...",
         image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop",
     },
-    {
-        id: "cat-5",
-        label: "PG / Co-living",
-        type: "pg",
-        count: "...",
-        image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=800&auto=format&fit=crop",
-    },
+
 ];
 
 export function CategoryScroll() {
@@ -101,7 +95,7 @@ export function CategoryScroll() {
             {/* Mobile: Horizontal scroll | Desktop: 5-column grid */}
             <div
                 className={cn(
-                    "flex lg:grid lg:grid-cols-5 gap-6",
+                    "flex lg:grid lg:grid-cols-4 gap-6",
                     "overflow-x-auto lg:overflow-visible snap-x snap-mandatory scrollbar-hide",
                     "px-4 sm:px-6 lg:px-8 pb-4 lg:pb-0 max-w-7xl mx-auto"
                 )}

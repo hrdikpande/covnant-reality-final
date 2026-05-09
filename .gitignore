@@ -38,6 +38,8 @@ check_cities.mjs
 check_cities_all.mjs
 check_profiles.mjs
 test_insert_city.mjs
+generatePropertyBlogs.mjs
+backfill-slugs.mjs
 
 # lint output
 lint-output.txt

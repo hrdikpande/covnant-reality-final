@@ -28,6 +28,8 @@ function getSupabase() {
  *  - Full slug: "commercial-warehouse-in-patancheru-hyderabad-telangana-a1b2c3"
  *  - Legacy UUID: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
  */
+const PROPERTY_META_SELECT = `id, title, description, property_type, commercial_type, listing_type, city, locality, state, address, price, area_sqft, bedrooms, latitude, longitude, property_media(media_url, media_type)`;
+
 async function findProperty(slugOrId: string) {
   const supabase = getSupabase();
   if (!supabase) return null;
@@ -36,27 +38,20 @@ async function findProperty(slugOrId: string) {
   if (isUUID(slugOrId)) {
     const { data } = await supabase
       .from("properties")
-      .select("id, title, description, property_type, commercial_type, listing_type, city, locality, state, address, price, image_urls, area_sqft, bedrooms, latitude, longitude, slug")
+      .select(PROPERTY_META_SELECT)
       .eq("id", slugOrId)
       .maybeSingle();
     return data;
   }
 
-  // 2. Try exact slug match first
-  const { data: bySlug } = await supabase
-    .from("properties")
-    .select("id, title, description, property_type, commercial_type, listing_type, city, locality, state, address, price, image_urls, area_sqft, bedrooms, latitude, longitude, slug")
-    .eq("slug", slugOrId)
-    .maybeSingle();
-
-  if (bySlug) return bySlug;
-
-  // 3. Fallback: extract short ID and find by id prefix
+  // 2. Try to extract the UUID from the slug (last segment after the last dash)
   const { shortId } = parsePropertySlug(slugOrId);
+  
+  // 3. Fallback: extract short ID and find by id prefix
   if (shortId && shortId.length >= 6) {
     const { data: byPrefix } = await supabase
       .from("properties")
-      .select("id, title, description, property_type, commercial_type, listing_type, city, locality, state, address, price, image_urls, area_sqft, bedrooms, latitude, longitude, slug")
+      .select(PROPERTY_META_SELECT)
       .like("id", `${shortId.slice(0, 8)}%`)
       .limit(1)
       .maybeSingle();
@@ -77,7 +72,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     // If it was a UUID, redirect to the slug URL
-    if (isUUID(slug) && data.slug) {
+    const generatedSlug = generatePropertySlug({
+      id: data.id,
+      property_type: data.property_type,
+      commercial_type: data.commercial_type,
+      locality: data.locality,
+      city: data.city,
+      state: data.state,
+    });
+
+    if (isUUID(slug)) {
       return { title: "Redirecting..." };
     }
 
@@ -100,17 +104,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       price: data.price,
     });
 
-    const canonicalSlug = data.slug || generatePropertySlug({
-      id: data.id,
-      property_type: data.property_type,
-      commercial_type: data.commercial_type,
-      locality: data.locality,
-      city: data.city,
-      state: data.state,
-    });
+    const canonicalSlug = generatedSlug;
 
     const canonicalUrl = `${BASE_URL}/property/${canonicalSlug}`;
-    const imageUrl = data.image_urls?.[0] || "/og-image.jpg";
+    const firstMedia = data.property_media?.find((m: any) => m.media_type === 'image' || !m.media_type);
+    const imageUrl = firstMedia?.media_url
+      ? (firstMedia.media_url.startsWith('http') ? firstMedia.media_url : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${firstMedia.media_url}`)
+      : "/og-image.jpg";
 
     return {
       title,
@@ -144,7 +144,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   if (isUUID(slug)) {
     const data = await findProperty(slug);
     if (data) {
-      const targetSlug = data.slug || generatePropertySlug({
+      const targetSlug = generatePropertySlug({
         id: data.id,
         property_type: data.property_type,
         commercial_type: data.commercial_type,
@@ -159,7 +159,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   // Fetch property data for JSON-LD (best-effort, non-blocking)
   let schemaData = null;
   let breadcrumbData = null;
-  let propertyData: { id: string; slug?: string | null; property_type?: string | null; commercial_type?: string | null; locality?: string | null; city?: string | null; state?: string | null } | null = null;
+  let propertyData: { id: string; property_type?: string | null; commercial_type?: string | null; locality?: string | null; city?: string | null; state?: string | null } | null = null;
 
   try {
     const data = await findProperty(slug);
@@ -174,7 +174,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         state: data.state,
       });
 
-      const canonicalSlug = data.slug || slug;
+      const canonicalSlug = slug;
 
       schemaData = getRealEstateListingSchema({
         title: pageTitle,

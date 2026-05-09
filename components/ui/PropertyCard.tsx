@@ -95,10 +95,6 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
                         <Badge variant="default" className="bg-blue-100/95 backdrop-blur-sm text-blue-700 shadow-sm border border-blue-200 uppercase tracking-wide font-bold">
                             FOR RENT
                         </Badge>
-                    ) : badge && badge === "pg" ? (
-                        <Badge variant="default" className="bg-purple-100/95 backdrop-blur-sm text-purple-700 shadow-sm border border-purple-200 uppercase tracking-wide font-bold">
-                            PG
-                        </Badge>
                     ) : badge ? (
                         <Badge variant="default" className="bg-white/90 backdrop-blur-sm text-text-primary shadow-sm border-0 font-semibold">
                             {badge.toUpperCase()}

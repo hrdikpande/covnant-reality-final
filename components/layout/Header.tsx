@@ -50,6 +50,7 @@ export function Header() {
                             <div className="flex items-center gap-6">
                                 <Link href="/search?category=residential" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Residential</Link>
                                 <Link href="/search?category=commercial" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Commercial</Link>
+                                <Link href="/blog" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Blog</Link>
                             </div>
                         </nav>
                     </div>
