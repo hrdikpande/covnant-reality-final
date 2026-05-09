@@ -1,6 +1,13 @@
+import { Metadata } from "next";
 import { AgentDashboardSidebar } from "@/components/agent/AgentDashboardSidebar";
 import { Container } from "@/components/layout/Container";
 import { RoleGuard } from "@/components/RoleGuard";
+
+export const metadata: Metadata = {
+    title: "Agent Dashboard | Covnant Reality India PVT LTD",
+    description: "Manage your listings and leads",
+    robots: { index: false, follow: false },
+};
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
     return (

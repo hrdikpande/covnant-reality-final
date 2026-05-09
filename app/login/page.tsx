@@ -15,6 +15,10 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const redirectPath = searchParams?.get("redirect");
+    const isPropertyRedirect = redirectPath?.startsWith("/property/");
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,10 +50,9 @@ export default function LoginPage() {
                     }
                 }
 
-                const searchParams = new URLSearchParams(window.location.search);
-                const redirectPath = searchParams.get("redirect");
+                const redirectPath = new URLSearchParams(window.location.search).get("redirect");
 
-                if (redirectPath && redirectPath.startsWith('/')) {
+                if (redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//')) {
                     router.push(redirectPath);
                 } else {
                     router.push('/');
@@ -76,6 +79,16 @@ export default function LoginPage() {
                         Login to access your dashboard
                     </p>
                 </div>
+
+                {/* Contextual Notification */}
+                {isPropertyRedirect && !authError && (
+                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <svg className="w-5 h-5 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm font-medium text-primary">Please sign in to view this property</p>
+                    </div>
+                )}
 
                 {/* Error Display */}
                 {authError && (

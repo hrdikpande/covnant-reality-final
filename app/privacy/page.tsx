@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Privacy Policy | Covnant Reality India PVT LTD',
-    description: 'Privacy Policy and data handling practices for Covnant Reality India PVT LTD.',
-};
+import { buildMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildMetadata("privacy");
 
 export default function PrivacyPolicyPage() {
     return (

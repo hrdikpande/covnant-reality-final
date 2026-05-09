@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Terms of Service | Covnant Reality India PVT LTD',
-    description: 'Terms of Service and usage conditions for Covnant Reality India PVT LTD.',
-};
+import { buildMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildMetadata("terms");
 
 export default function TermsOfServicePage() {
     return (

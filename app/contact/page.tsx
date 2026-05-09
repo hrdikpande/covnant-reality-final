@@ -1,6 +1,8 @@
-"use client";
-
+import type { Metadata } from 'next';
 import { Mail, MapPin, Phone } from "lucide-react";
+import { buildMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildMetadata("contact");
 
 export default function ContactPage() {
     return (

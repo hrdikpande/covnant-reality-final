@@ -6,6 +6,7 @@ export const metadata: Metadata = {
     title: "My Dashboard | Covnant Reality India PVT LTD",
     description:
         "Manage your saved properties, visits, alerts and bookings.",
+    robots: { index: false, follow: false },
 };
 
 export default function DashboardLayout({

@@ -2,10 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { HelpCircle, Info, Mail, Shield, FileText } from 'lucide-react';
 
-export const metadata: Metadata = {
-    title: 'Support Center | Covnant Reality India PVT LTD',
-    description: 'Find help, support, and legal information for Covnant Reality India PVT LTD.',
-};
+import { buildMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildMetadata("support");
 
 export default function SupportPage() {
     const supportLinks = [

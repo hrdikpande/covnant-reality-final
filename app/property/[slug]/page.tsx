@@ -9,7 +9,7 @@ import {
   generatePropertySlug,
   isUUID,
 } from "@/lib/slugify";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 const BASE_URL = "https://www.covnantreality.com";
 
@@ -24,41 +24,43 @@ function getSupabase() {
 
 /**
  * Find property by slug or by short ID suffix.
- * Supports both:
- *  - Full slug: "commercial-warehouse-in-patancheru-hyderabad-telangana-a1b2c3"
- *  - Legacy UUID: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
  */
-const PROPERTY_META_SELECT = `id, title, description, property_type, commercial_type, listing_type, city, locality, state, address, price, area_sqft, bedrooms, latitude, longitude, property_media(media_url, media_type)`;
+const PROPERTY_META_SELECT = `id, title, description, property_type, commercial_type, listing_type, city, locality, state, address, price, area_sqft, bedrooms, latitude, longitude, property_media(media_url, media_type), status`;
 
 async function findProperty(slugOrId: string) {
-  const supabase = getSupabase();
-  if (!supabase) return null;
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return null;
 
-  // 1. If it looks like a UUID, look up directly by id
-  if (isUUID(slugOrId)) {
-    const { data } = await supabase
-      .from("properties")
-      .select(PROPERTY_META_SELECT)
-      .eq("id", slugOrId)
-      .maybeSingle();
-    return data;
+    // 1. If it looks like a UUID, look up directly by id
+    if (isUUID(slugOrId)) {
+      const { data } = await supabase
+        .from("properties")
+        .select(PROPERTY_META_SELECT)
+        .eq("id", slugOrId)
+        .maybeSingle();
+      return data;
+    }
+
+    // 2. Try to extract the UUID from the slug
+    const { shortId } = parsePropertySlug(slugOrId);
+    
+    // 3. Find by id prefix (GTE/LTE range to match UUID start)
+    if (shortId && shortId.length === 8) {
+      const { data: byPrefix } = await supabase
+        .from("properties")
+        .select(PROPERTY_META_SELECT)
+        .gte("id", `${shortId}-0000-0000-0000-000000000000`)
+        .lte("id", `${shortId}-ffff-ffff-ffff-ffffffffffff`)
+        .maybeSingle();
+      return byPrefix;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error finding property:", error);
+    return null;
   }
-
-  // 2. Try to extract the UUID from the slug (last segment after the last dash)
-  const { shortId } = parsePropertySlug(slugOrId);
-  
-  // 3. Fallback: extract short ID and find by id prefix
-  if (shortId && shortId.length >= 6) {
-    const { data: byPrefix } = await supabase
-      .from("properties")
-      .select(PROPERTY_META_SELECT)
-      .like("id", `${shortId.slice(0, 8)}%`)
-      .limit(1)
-      .maybeSingle();
-    return byPrefix;
-  }
-
-  return null;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -67,11 +69,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   try {
     const data = await findProperty(slug);
 
-    if (!data) {
-      return { title: "Property Not Found | Covnant Reality" };
+    if (!data || data.status === 'expired' || data.status === 'sold' || data.status === 'draft') {
+      return { 
+        title: "Property Not Found | Covnant Reality",
+        robots: { index: false, follow: false }
+      };
     }
 
-    // If it was a UUID, redirect to the slug URL
+    // If it was a UUID, we don't return full metadata here as it will redirect
+    if (isUUID(slug)) {
+      return { title: "Redirecting..." };
+    }
+
     const generatedSlug = generatePropertySlug({
       id: data.id,
       property_type: data.property_type,
@@ -81,32 +90,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       state: data.state,
     });
 
-    if (isUUID(slug)) {
-      return { title: "Redirecting..." };
+    // SEO-optimized Title: "{Property Name} for Sale in {City} | Covnant Reality"
+    const intent = data.listing_type === 'rent' ? 'Rent' : 'Sale';
+    const title = `${data.title || 'Property'} for ${intent} in ${data.city || 'Hyderabad'} | Covnant Reality`;
+
+    // SEO-optimized Description: Trimmed to 155 chars
+    let description = data.description 
+      ? data.description.substring(0, 155).trim() 
+      : buildPropertyMetaDescription(data);
+    
+    if (data.description && data.description.length > 155) {
+      description += "...";
     }
 
-    const pageTitle = buildPropertyPageTitle({
-      property_type: data.property_type,
-      commercial_type: data.commercial_type,
-      locality: data.locality,
-      city: data.city,
-      state: data.state,
-    });
-
-    const title = `${pageTitle} | Covnant Reality`;
-
-    const description = buildPropertyMetaDescription({
-      property_type: data.property_type,
-      commercial_type: data.commercial_type,
-      listing_type: data.listing_type,
-      locality: data.locality,
-      city: data.city,
-      price: data.price,
-    });
-
-    const canonicalSlug = generatedSlug;
-
-    const canonicalUrl = `${BASE_URL}/property/${canonicalSlug}`;
+    const canonicalUrl = `${BASE_URL}/property/${generatedSlug}`;
     const firstMedia = data.property_media?.find((m: any) => m.media_type === 'image' || !m.media_type);
     const imageUrl = firstMedia?.media_url
       ? (firstMedia.media_url.startsWith('http') ? firstMedia.media_url : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${firstMedia.media_url}`)
@@ -131,8 +128,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description,
         images: [imageUrl],
       },
+      robots: {
+        index: true,
+        follow: true,
+      }
     };
-  } catch {
+  } catch (error) {
     return { title: "Property Details | Covnant Reality" };
   }
 }
@@ -140,7 +141,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function PropertyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  // Handle UUID → slug redirect
+  // 1. Handle UUID → slug redirect
   if (isUUID(slug)) {
     const data = await findProperty(slug);
     if (data) {
@@ -153,49 +154,59 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         state: data.state,
       });
       redirect(`/property/${targetSlug}`);
+    } else {
+      notFound();
     }
   }
 
-  // Fetch property data for JSON-LD (best-effort, non-blocking)
+  // 2. Fetch property data with 5xx protection
+  let data: any = null;
+  try {
+    data = await findProperty(slug);
+  } catch (error) {
+    console.error("Server error fetching property:", error);
+    // Graceful fail to 404 for SEO
+    notFound();
+  }
+
+  // 3. Proper 404 handling for expired/sold/missing properties (Soft 404 fix)
+  if (!data || data.status === 'expired' || data.status === 'sold' || data.status === 'draft') {
+    notFound();
+  }
+
+  // 4. JSON-LD Structured Data
   let schemaData: any = null;
   let breadcrumbData: any = null;
-  let propertyData: { id: string; property_type?: string | null; commercial_type?: string | null; locality?: string | null; city?: string | null; state?: string | null } | null = null;
 
   try {
-    const data = await findProperty(slug);
+    const pageTitle = buildPropertyPageTitle(data);
+    const canonicalSlug = slug;
 
-    if (data) {
-      propertyData = data;
-      const pageTitle = buildPropertyPageTitle({
-        property_type: data.property_type,
-        commercial_type: data.commercial_type,
-        locality: data.locality,
-        city: data.city,
-        state: data.state,
-      });
+    const firstMedia = data.property_media?.find((m: any) => m.media_type === 'image' || !m.media_type);
+    const imageUrl = firstMedia?.media_url
+      ? (firstMedia.media_url.startsWith('http') ? firstMedia.media_url : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${firstMedia.media_url}`)
+      : "https://www.covnantreality.com/og-image.jpg";
 
-      const canonicalSlug = slug;
+    schemaData = getRealEstateListingSchema({
+      title: data.title || pageTitle,
+      description: data.description || "",
+      id: canonicalSlug,
+      price: data.price,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      city: data.city || "Hyderabad",
+      location: data.locality || "",
+      imageUrl: imageUrl,
+      useSlugUrl: true,
+    });
 
-      schemaData = getRealEstateListingSchema({
-        title: pageTitle,
-        description: data.description || "",
-        id: canonicalSlug,
-        price: data.price,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        city: data.city || "Hyderabad",
-        location: data.locality || "",
-        useSlugUrl: true,
-      });
-
-      breadcrumbData = getBreadcrumbSchema([
-        { name: "Home", url: BASE_URL },
-        { name: data.property_type === "commercial" ? "Commercial Property" : "Properties", url: data.property_type === "commercial" ? `${BASE_URL}/commercial-property-hyderabad` : `${BASE_URL}/search` },
-        { name: pageTitle, url: `${BASE_URL}/property/${canonicalSlug}` },
-      ]);
-    }
-  } catch {
-    // Non-critical — continue without schema
+    breadcrumbData = getBreadcrumbSchema([
+      { name: "Home", url: BASE_URL },
+      { name: data.property_type === "commercial" ? "Commercial Property" : "Properties", url: data.property_type === "commercial" ? `${BASE_URL}/commercial-property-hyderabad` : `${BASE_URL}/search` },
+      { name: data.title || pageTitle, url: `${BASE_URL}/property/${canonicalSlug}` },
+    ]);
+  } catch (e) {
+    // Non-critical
   }
 
   return (

@@ -16,6 +16,7 @@ const PROTECTED_ROUTES: Record<string, UserRole[]> = {
     "/builder": ["builder"],
     "/admin": ["admin"],
     "/owner": ["owner"],
+    "/property": ["buyer", "tenant", "owner", "agent", "builder", "admin"],
 };
 
 /** Routes that authenticated users should NOT visit (redirect to their dashboard). */
@@ -28,7 +29,14 @@ const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
 export async function middleware(request: NextRequest) {
     try {
         const { user, supabaseResponse } = await updateSession(request);
-        const { pathname } = request.nextUrl;
+        let { pathname } = request.nextUrl;
+
+        // 0a. Normalize plural /properties/ to singular /property/
+        if (pathname.startsWith("/properties/")) {
+            const normalizedUrl = request.nextUrl.clone();
+            normalizedUrl.pathname = pathname.replace("/properties/", "/property/");
+            return NextResponse.redirect(normalizedUrl, 301);
+        }
 
         const role = (user?.user_metadata?.role as UserRole) ?? null;
 
@@ -78,7 +86,7 @@ export async function middleware(request: NextRequest) {
             if (!user) {
                 const loginUrl = request.nextUrl.clone();
                 loginUrl.pathname = "/login";
-                loginUrl.searchParams.set("next", pathname);
+                loginUrl.searchParams.set("redirect", pathname);
                 return NextResponse.redirect(loginUrl);
             }
 

@@ -105,6 +105,27 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     canonicalUrl: `${BASE_URL}/faq`,
     ogImage: OG_IMAGE,
   },
+  privacy: {
+    title: `Privacy Policy | ${BRAND}`,
+    description:
+      "Privacy Policy and data handling practices for Covnant Reality India PVT LTD.",
+    canonicalUrl: `${BASE_URL}/privacy`,
+    ogImage: OG_IMAGE,
+  },
+  terms: {
+    title: `Terms of Service | ${BRAND}`,
+    description:
+      "Terms of Service and usage conditions for Covnant Reality India PVT LTD.",
+    canonicalUrl: `${BASE_URL}/terms`,
+    ogImage: OG_IMAGE,
+  },
+  support: {
+    title: `Support Center | ${BRAND}`,
+    description:
+      "Find help, support, and legal information for Covnant Reality India PVT LTD.",
+    canonicalUrl: `${BASE_URL}/support`,
+    ogImage: OG_IMAGE,
+  },
 };
 
 /**

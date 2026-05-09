@@ -6,6 +6,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 export const metadata: Metadata = {
     title: "Builder Dashboard | Covnant Reality India PVT LTD",
     description: "Manage your projects and leads",
+    robots: { index: false, follow: false },
 };
 
 export default function BuilderLayout({

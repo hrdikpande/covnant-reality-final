@@ -50,14 +50,14 @@ async function resolveSlugToId(slug: string): Promise<string | null> {
 
     if (bySlug) return bySlug.id;
 
-    // Fallback: short ID prefix match
+    // Fallback: short ID prefix match (GTE/LTE range to match UUID start)
     const { shortId } = parsePropertySlug(slug);
-    if (shortId && shortId.length >= 6) {
+    if (shortId && shortId.length === 8) {
         const { data: byPrefix } = await supabase
             .from("properties")
             .select("id")
-            .like("id", `${shortId.slice(0, 8)}%`)
-            .limit(1)
+            .gte("id", `${shortId}-0000-0000-0000-000000000000`)
+            .lte("id", `${shortId}-ffff-ffff-ffff-ffffffffffff`)
             .maybeSingle();
         if (byPrefix) return byPrefix.id;
     }
