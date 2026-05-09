@@ -88,3 +88,17 @@
   to = "/google2815e16a85206310.html"
   status = 200
 
+# Force traffic from apex (covnantreality.com) to canonical www (www.covnantreality.com)
+# This resolves DNS/redirect issues after switching to Netlify DNS.
+[[redirects]]
+  from = "https://covnantreality.com/*"
+  to = "https://www.covnantreality.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://covnantreality.com/*"
+  to = "https://www.covnantreality.com/:splat"
+  status = 301
+  force = true
+
