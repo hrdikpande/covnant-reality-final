@@ -54,6 +54,9 @@ export async function middleware(request: NextRequest) {
                             setAll() { /* no-op */ },
                         },
                     });
+                    // We cannot redirect to a slug if the slug column doesn't exist.
+                    // The client-side PropertyDetailClient will handle SEO titles and canonical tags.
+                    /*
                     const { data } = await supabaseClient
                         .from("properties")
                         .select("slug")
@@ -65,6 +68,7 @@ export async function middleware(request: NextRequest) {
                         slugUrl.pathname = `/property/${data.slug}`;
                         return NextResponse.redirect(slugUrl, 301);
                     }
+                    */
                 }
             } catch {
                 // Fall through — let the page handle it

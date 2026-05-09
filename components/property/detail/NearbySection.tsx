@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { TrainTrack, School, Hospital, ShoppingBag, Loader2 } from "lucide-react";
+import { TrainTrack, School, Hospital, ShoppingBag, Loader2, Navigation } from "lucide-react";
 
 interface NearbyPlace {
     label: string;
-    icon: React.ElementType;
+    category: string; // Used to look up the icon from TEMPLATES
     name: string;
     distance: string;
     loading: boolean;
@@ -178,7 +178,12 @@ export function NearbySection({ latitude, longitude, pincode }: NearbySectionPro
             const name = nearest.tags?.name || nearest.tags?.brand || template.label.split(" / ")[0];
             const distKm = nearest.dist || 0;
             const distanceLabel = distKm < 1 ? `${Math.round(distKm * 1000)}m` : `${distKm.toFixed(1)}km`;
-            return { name, distance: distanceLabel };
+
+            return {
+                name,
+                distance: distanceLabel,
+                category,
+            };
         },
         []
     );
@@ -211,7 +216,8 @@ export function NearbySection({ latitude, longitude, pincode }: NearbySectionPro
                     const data = await queryOverpass(query, 15000);
                     const result = processResult(template.category, data.elements || [], finalLat, finalLon);
                     return {
-                        ...template,
+                        label: template.label,
+                        category: template.category,
                         name: result?.name || "Not found nearby",
                         distance: result?.distance || "N/A",
                         loading: false,
@@ -219,7 +225,8 @@ export function NearbySection({ latitude, longitude, pincode }: NearbySectionPro
                 } catch {
                     // Individual category failure shouldn't break the whole section
                     return {
-                        ...template,
+                        label: template.label,
+                        category: template.category,
                         name: "Unavailable",
                         distance: "—",
                         loading: false,
@@ -245,10 +252,22 @@ export function NearbySection({ latitude, longitude, pincode }: NearbySectionPro
 
     const nearbyPlaces = useMemo(() => {
         if (!hasCoords && !geocoding && !hasPincode) {
-            return TEMPLATES.map(t => ({ ...t, name: "No location data", distance: "N/A", loading: false }));
+            return TEMPLATES.map(t => ({ 
+                label: t.label, 
+                category: t.category, 
+                name: "No location data", 
+                distance: "N/A", 
+                loading: false 
+            }));
         }
         if (fetchedPlaces) return fetchedPlaces;
-        return TEMPLATES.map(t => ({ ...t, name: "Nearby", distance: "calculating...", loading: true }));
+        return TEMPLATES.map(t => ({ 
+            label: t.label, 
+            category: t.category, 
+            name: "Nearby", 
+            distance: "calculating...", 
+            loading: true 
+        }));
     }, [hasCoords, geocoding, hasPincode, fetchedPlaces]);
 
     return (
@@ -257,7 +276,8 @@ export function NearbySection({ latitude, longitude, pincode }: NearbySectionPro
 
             <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-x-12">
                 {nearbyPlaces.map((place, index) => {
-                    const Icon = place.icon;
+                    const template = TEMPLATES.find(t => t.category === place.category);
+                    const Icon = template?.icon || Navigation; // Fallback to Navigation if something goes wrong
                     return (
                         <div key={index} className="flex items-center justify-between group">
                             <div className="flex items-center gap-3">

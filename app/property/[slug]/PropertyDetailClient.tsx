@@ -41,25 +41,27 @@ async function resolveSlugToId(slug: string): Promise<string | null> {
 
     const supabase = createClient();
 
-    // Try exact slug match
-    const { data: bySlug } = await supabase
-        .from("properties")
-        .select("id")
-        .eq("slug", slug)
-        .maybeSingle();
-
-    if (bySlug) return bySlug.id;
-
-    // Fallback: short ID prefix match (GTE/LTE range to match UUID start)
-    const { shortId } = parsePropertySlug(slug);
-    if (shortId && shortId.length === 8) {
-        const { data: byPrefix } = await supabase
-            .from("properties")
-            .select("id")
-            .gte("id", `${shortId}-0000-0000-0000-000000000000`)
-            .lte("id", `${shortId}-ffff-ffff-ffff-ffffffffffff`)
-            .maybeSingle();
-        if (byPrefix) return byPrefix.id;
+    try {
+        // We do NOT query by "slug" column anymore as it doesn't exist in the DB.
+        // Instead, we rely on the shortId prefix match which is part of the SEO slug.
+        const { shortId } = parsePropertySlug(slug);
+        
+        if (shortId && shortId.length === 8) {
+            const { data: byPrefix, error } = await supabase
+                .from("properties")
+                .select("id")
+                .gte("id", `${shortId}-0000-0000-0000-000000000000`)
+                .lte("id", `${shortId}-ffff-ffff-ffff-ffffffffffff`)
+                .maybeSingle();
+            
+            if (error) {
+                console.error("[resolveSlugToId] DB error:", error);
+                return null;
+            }
+            if (byPrefix) return byPrefix.id;
+        }
+    } catch (err) {
+        console.error("[resolveSlugToId] Unexpected error:", err);
     }
 
     return null;
