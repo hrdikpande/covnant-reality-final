@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BottomNav } from "@/components/layout/BottomNav";
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -28,7 +29,7 @@ export function AppShell({ children }: AppShellProps) {
 
             {!isDedicatedLayout && <Footer />}
 
-            {/* {!isDedicatedLayout && <BottomNav />} */}
+            {!isDedicatedLayout && <BottomNav />}
         </div>
     );
 }

@@ -1,15 +1,18 @@
 "use client";
 
-import { MapPin, User } from "lucide-react";
+import { MapPin, User, Menu, X } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { LocationSelector } from "@/components/ui/LocationSelector";
 import { useAuth, UserRole } from "@/components/AuthContext";
 import { useLocation } from "@/components/LocationContext";
+import { cn } from "@/lib/utils";
 
 export function Header() {
     const { selectedLocation, setLocation, isLocationSelectorOpen, openLocationSelector, closeLocationSelector } = useLocation();
     const { userRole } = useAuth();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const getDashboardPath = (role: UserRole) => {
         if (role === "agent") return "/agent";
@@ -18,6 +21,14 @@ export function Header() {
         if (role === "owner") return "/owner";
         return "/dashboard";
     };
+
+    const navLinks = [
+        { href: "/search?type=buy", label: "Buy" },
+        { href: "/search?type=rent", label: "Rent" },
+        { href: "/search?category=residential", label: "Residential" },
+        { href: "/search?category=commercial", label: "Commercial" },
+        { href: "/blog", label: "Blog" },
+    ];
 
     return (
         <>
@@ -42,7 +53,6 @@ export function Header() {
                             <div className="flex items-center gap-6">
                                 <Link href="/search?type=buy" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Buy</Link>
                                 <Link href="/search?type=rent" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Rent</Link>
-                                {/* {canPostProperty && <Link href={userRole ? "/post-property" : "/login?redirect=/post-property"} className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Sell</Link>} */}
                             </div>
 
                             <div className="h-4 w-px bg-border mx-2" />
@@ -57,12 +67,6 @@ export function Header() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-1.5 sm:gap-3">
-                        {/* {canPostProperty && (
-                            <Link href={userRole ? "/post-property" : "/login?redirect=/post-property"} className="hidden lg:flex items-center justify-center h-9 px-4 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors">
-                                Post Property
-                            </Link>
-                        )} */}
-
                         {/* Location Selector */}
                         <button
                             type="button"
@@ -90,28 +94,86 @@ export function Header() {
                         </button>
 
                         {userRole ? (
-                            <>
-                                {/* Profile Icon (Always visible) */}
-                                <Link
-                                    href={getDashboardPath(userRole)}
-                                    className="flex items-center justify-center h-10 w-10 rounded-full text-white bg-primary shadow-md hover:bg-primary-hover transition-all"
-                                    aria-label="User dashboard"
-                                >
-                                    <User className="h-5 w-5" />
-                                </Link>
-                            </>
+                            <Link
+                                href={getDashboardPath(userRole)}
+                                className="flex items-center justify-center h-10 w-10 rounded-full text-white bg-primary shadow-md hover:bg-primary-hover transition-all"
+                                aria-label="User dashboard"
+                            >
+                                <User className="h-5 w-5" />
+                            </Link>
                         ) : (
-                            <>
-                                {/* Profile Icon (Always visible) */}
-                                <Link
-                                    href="/login"
-                                    className="flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
-                                    aria-label="User profile"
-                                >
-                                    <User className="h-5 w-5" />
-                                </Link>
-                            </>
+                            <Link
+                                href="/login"
+                                className="flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
+                                aria-label="User profile"
+                            >
+                                <User className="h-5 w-5" />
+                            </Link>
                         )}
+
+                        {/* Mobile Menu Toggle */}
+                        <button
+                            type="button"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="lg:hidden flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
+                            aria-label="Toggle menu"
+                        >
+                            {isMobileMenuOpen ? (
+                                <X className="h-5 w-5" />
+                            ) : (
+                                <Menu className="h-5 w-5" />
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Navigation Menu */}
+                <div className={cn(
+                    "lg:hidden fixed inset-0 z-[60] bg-white transition-transform duration-300 ease-in-out",
+                    isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+                )}>
+                    <div className="flex flex-col h-full">
+                        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
+                            <Image
+                                src="/logo.png"
+                                alt="Covnant Reality Logo"
+                                width={120}
+                                height={40}
+                                className="object-contain"
+                            />
+                            <button
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="p-2 text-slate-500 hover:text-primary transition-colors"
+                            >
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+                        <nav className="flex-1 overflow-y-auto py-6 px-4">
+                            <div className="space-y-1">
+                                {navLinks.map((link) => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center px-4 py-4 text-lg font-semibold text-slate-700 hover:text-primary hover:bg-slate-50 rounded-xl transition-all"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </div>
+                        </nav>
+                        <div className="p-4 border-t border-slate-100">
+                            <p className="text-center text-sm text-slate-500 mb-4">
+                                Need help? Call us at +91 99999 99999
+                            </p>
+                            <Link
+                                href="/contact"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center justify-center w-full h-12 rounded-xl bg-primary text-white font-bold hover:bg-primary-hover transition-colors"
+                            >
+                                Contact Support
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </header>
