@@ -15,9 +15,10 @@ export default function NewBlogPage() {
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     
     // Data state
-    const [properties, setProperties] = useState<Property[]>([]);
+    const [serialNumbersInput, setSerialNumbersInput] = useState("");
     const [selectedProperties, setSelectedProperties] = useState<Property[]>([]);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [invalidSerials, setInvalidSerials] = useState<number[]>([]);
+    const [isFetchingSerials, setIsFetchingSerials] = useState(false);
     
     // Blog generation inputs
     const [titleInput, setTitleInput] = useState("");
@@ -33,35 +34,47 @@ export default function NewBlogPage() {
     const [images, setImages] = useState<{url: string, alt: string, isOg: boolean}[]>([]);
     const [uploading, setUploading] = useState(false);
 
-    // Fetch properties on mount
+    // Fetch properties by serial number when input changes
     useEffect(() => {
         const fetchProperties = async () => {
-            const { data, error } = await supabase
-                .from("properties")
-                .select("*")
-                .eq("status", "approved")
-                .order("created_at", { ascending: false })
-                .limit(50);
-            
-            if (data) setProperties(data as Property[]);
+            if (!serialNumbersInput.trim()) {
+                setSelectedProperties([]);
+                setInvalidSerials([]);
+                return;
+            }
+
+            const inputSerials = serialNumbersInput
+                .split(",")
+                .map(s => parseInt(s.trim(), 10))
+                .filter(s => !isNaN(s));
+
+            if (inputSerials.length === 0) {
+                setSelectedProperties([]);
+                setInvalidSerials([]);
+                return;
+            }
+
+            setIsFetchingSerials(true);
+            try {
+                const res = await fetch(`/api/admin/properties/by-serial?serials=${inputSerials.join(",")}`);
+                if (res.ok) {
+                    const { data } = await res.json();
+                    setSelectedProperties(data as Property[]);
+                    
+                    // Identify which entered serials were not found
+                    const foundSerials = (data as Property[]).map(p => p.serial_number);
+                    const notFound = inputSerials.filter(s => !foundSerials.includes(s));
+                    setInvalidSerials(notFound);
+                }
+            } catch (err) {
+                console.error("Failed to fetch properties by serials:", err);
+            }
+            setIsFetchingSerials(false);
         };
-        fetchProperties();
-    }, []);
 
-    // Filter properties
-    const filteredProperties = properties.filter(p => 
-        (p?.title || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
-        (p?.city || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
-        (p?.type || "").toLowerCase().includes((searchQuery || "").toLowerCase())
-    );
-
-    const handlePropertyToggle = (property: Property) => {
-        setSelectedProperties(prev => 
-            prev.some(p => p.id === property.id)
-                ? prev.filter(p => p.id !== property.id)
-                : [...prev, property]
-        );
-    };
+        const timeoutId = setTimeout(fetchProperties, 500);
+        return () => clearTimeout(timeoutId);
+    }, [serialNumbersInput]);
 
     const handleGenerate = async () => {
         if (!keyword) return alert("Focus keyword is required");
@@ -201,57 +214,70 @@ export default function NewBlogPage() {
 
             {/* STEP 1: Select Properties */}
             {step === 1 && (
-                <div className="flex gap-8 h-[600px]">
-                    <div className="flex-1 flex flex-col bg-white rounded-xl border border-border shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-border">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted w-5 h-5" />
-                                <input 
-                                    type="text"
-                                    placeholder="Search properties by name, location, or type..."
-                                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                <div className="flex gap-8">
+                    <div className="flex-1 bg-white rounded-xl border border-border shadow-sm p-6">
+                        <h2 className="text-xl font-bold mb-4">Link Properties</h2>
+                        <p className="text-sm text-text-muted mb-4">
+                            Enter the serial numbers of the properties you want to link to this blog post, separated by commas (e.g. "12, 45, 78").
+                        </p>
+                        
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium mb-2">Property Serial Numbers</label>
+                            <input 
+                                type="text"
+                                placeholder="e.g. 12, 45, 78"
+                                className="w-full px-4 py-2 border border-border rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                value={serialNumbersInput}
+                                onChange={(e) => setSerialNumbersInput(e.target.value)}
+                            />
+                        </div>
+
+                        {isFetchingSerials && (
+                            <div className="text-sm text-text-muted mb-4 animate-pulse">Fetching properties...</div>
+                        )}
+
+                        {invalidSerials.length > 0 && !isFetchingSerials && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-start gap-2">
+                                <XCircle className="w-5 h-5 shrink-0" />
+                                <div>
+                                    <p className="font-semibold">Invalid or not found serial numbers:</p>
+                                    <p>{invalidSerials.join(", ")}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4">
-                            {filteredProperties.length === 0 && <div className="col-span-2 text-center py-10 text-xl font-bold text-red-500">No properties found in database!</div>}
-                            {filteredProperties.map(p => (
-                                <div 
-                                    key={p.id} 
-                                    onClick={() => handlePropertyToggle(p)}
-                                    className={`cursor-pointer border-2 rounded-xl p-4 ${selectedProperties.some(sp => sp.id === p.id) ? 'border-primary bg-blue-50' : 'border-slate-300 bg-white'}`}
-                                >
-                                    <h3 className="font-bold text-lg text-black">{p.title || "No Title"}</h3>
-                                    <p className="text-sm text-slate-500">{p.city || "No City"}</p>
-                                    <p className="text-sm font-semibold mt-2">Price: {p.price || "N/A"}</p>
+                        )}
+
+                        {selectedProperties.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="font-semibold text-text-primary">Found Properties ({selectedProperties.length})</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {selectedProperties.map(p => (
+                                        <div key={p.id} className="border border-border rounded-xl p-4 bg-slate-50 flex gap-4 items-center">
+                                            {p.image && (
+                                                <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-200">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <div className="text-xs font-bold text-primary mb-1">#{p.serial_number}</div>
+                                                <h4 className="font-bold text-sm text-text-primary line-clamp-1" title={p.title}>{p.title}</h4>
+                                                <p className="text-xs text-text-muted capitalize">{p.type} • {p.city}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
+                        )}
+
+                        <div className="mt-8 flex justify-end">
+                            <button 
+                                onClick={() => setStep(2)}
+                                disabled={selectedProperties.length === 0 && serialNumbersInput.trim() !== ""}
+                                className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold disabled:opacity-50 transition-colors hover:bg-primary/90"
+                            >
+                                Continue to Content
+                            </button>
                         </div>
-                    </div>
-                    <div className="w-80 bg-slate-50 rounded-xl border border-border p-6 flex flex-col">
-                        <h3 className="font-bold text-lg mb-4">Selected Properties ({selectedProperties.length})</h3>
-                        <div className="flex-1 overflow-y-auto space-y-3">
-                            {selectedProperties.map(p => (
-                                <div key={p.id} className="bg-white p-3 rounded-lg border border-border shadow-sm flex justify-between items-start">
-                                    <div>
-                                        <p className="font-medium text-sm line-clamp-1">{p.title}</p>
-                                        <p className="text-xs text-text-muted">{p.city}</p>
-                                    </div>
-                                    <button onClick={() => handlePropertyToggle(p)} className="text-red-500 hover:bg-red-50 p-1 rounded">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                        <button 
-                            onClick={() => setStep(2)}
-                            disabled={selectedProperties.length === 0}
-                            className="w-full mt-4 bg-primary text-white py-3 rounded-lg font-bold disabled:opacity-50"
-                        >
-                            Continue to Content
-                        </button>
                     </div>
                 </div>
             )}

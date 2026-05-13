@@ -11,9 +11,13 @@ import {
     approveProperty,
     rejectProperty,
     deleteAdminProperty,
+    fetchPropertyStats,
     type AdminProperty,
+    type PropertyStats,
 } from "@/lib/supabase/admin";
 import { PropertyDetailModal } from "@/components/admin/PropertyDetailModal";
+import { EditListingModal } from "@/components/admin/EditListingModal";
+import { PropertyOverviewDashboard } from "@/components/admin/PropertyOverviewDashboard";
 
 type TabType = "all" | "pending" | "approved" | "rejected";
 
@@ -30,6 +34,45 @@ export default function PropertyModerationPage() {
     const [selectedProperty, setSelectedProperty] = useState<AdminProperty | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+    // ── Filter state ──
+    const [categoryFilter, setCategoryFilter] = useState<string>("All");
+    const [subtypeFilter, setSubtypeFilter] = useState<string>("");
+    const [listingTypeFilter, setListingTypeFilter] = useState<string>("All");
+    const [searchQuery, setSearchQuery] = useState<string>("");
+
+    // ── Edit modal state ──
+    const [editProperty, setEditProperty] = useState<AdminProperty | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    // ── Dashboard stats ──
+    const [stats, setStats] = useState<PropertyStats | null>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
+
+    const commercialSubtypes = [
+        "Warehouse",
+        "Industrial Shed",
+        "RCC Shed",
+        "Godown",
+        "Ready to Move Offices",
+        "Bare Shell Offices",
+        "Shops & Retail",
+        "Commercial/Inst. Land",
+        "Agricultural/Farm Land",
+        "Industrial Land/Plots",
+        "Cold Storage",
+        "Factory & Manufacturing",
+        "Hotel/Resorts",
+    ];
+    const residentialSubtypes = [
+        "Flat/Apartment",
+        "Builder Floor",
+        "Independent House/Villa",
+        "Residential Land",
+        "1 RK/ Studio Apartment",
+        "Farm House",
+        "Serviced Apartments",
+    ];
+
     const tabs = [
         { id: "all", label: "All Properties" },
         { id: "pending", label: "Pending Approval" },
@@ -37,13 +80,24 @@ export default function PropertyModerationPage() {
         { id: "rejected", label: "Rejected" },
     ] as const;
 
-    const fetchData = useCallback(async (pageNum: number) => {
+    const loadStats = useCallback(async () => {
+        setStatsLoading(true);
+        const { data } = await fetchPropertyStats();
+        setStats(data);
+        setStatsLoading(false);
+    }, []);
+
+    const fetchData = useCallback(async (pageNum: number, cat = categoryFilter, sub = subtypeFilter, lt = listingTypeFilter, q = searchQuery) => {
         setLoading(true);
         setError(null);
         const offset = pageNum * PAGE_SIZE;
         const { data, totalCount: tc, error: err } = await fetchAdminProperties({
             limit: PAGE_SIZE,
             offset,
+            category: cat,
+            subtype: sub,
+            listingType: lt === "All" ? undefined : lt,
+            search: q,
         });
         if (err) {
             setError(err);
@@ -52,11 +106,11 @@ export default function PropertyModerationPage() {
             setTotalCount(tc);
         }
         setLoading(false);
-    }, []);
+    }, [categoryFilter, subtypeFilter, listingTypeFilter, searchQuery]);
 
     const handleRefresh = useCallback(async () => {
-        await fetchData(page);
-    }, [fetchData, page]);
+        await Promise.all([fetchData(page), loadStats()]);
+    }, [fetchData, loadStats, page]);
 
     useEffect(() => {
         let isMounted = true;
@@ -65,6 +119,10 @@ export default function PropertyModerationPage() {
             const { data, totalCount: tc, error: err } = await fetchAdminProperties({
                 limit: PAGE_SIZE,
                 offset,
+                category: categoryFilter,
+                subtype: subtypeFilter,
+                listingType: listingTypeFilter === "All" ? undefined : listingTypeFilter,
+                search: searchQuery,
             });
             if (!isMounted) return;
             if (err) setError(err);
@@ -76,7 +134,12 @@ export default function PropertyModerationPage() {
         };
         init();
         return () => { isMounted = false; };
-    }, [page]);
+    }, [page, categoryFilter, subtypeFilter, listingTypeFilter, searchQuery]);
+
+    // Fetch stats on mount
+    useEffect(() => {
+        loadStats();
+    }, [loadStats]);
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
@@ -90,7 +153,7 @@ export default function PropertyModerationPage() {
             setError(err);
             return;
         }
-        await fetchData(page);
+        await Promise.all([fetchData(page), loadStats()]);
     };
 
     const handleReject = async (id: string) => {
@@ -101,7 +164,7 @@ export default function PropertyModerationPage() {
             setError(err);
             return;
         }
-        await fetchData(page);
+        await Promise.all([fetchData(page), loadStats()]);
     };
 
     const handleDelete = async (id: string) => {
@@ -115,12 +178,21 @@ export default function PropertyModerationPage() {
             setError(err);
             return;
         }
-        await fetchData(page);
+        await Promise.all([fetchData(page), loadStats()]);
     };
 
     const handleViewDetails = (property: AdminProperty) => {
         setSelectedProperty(property);
         setIsDetailModalOpen(true);
+    };
+
+    const handleEdit = (property: AdminProperty) => {
+        setEditProperty(property);
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditSaveSuccess = async () => {
+        await Promise.all([fetchData(page), loadStats()]);
     };
 
     const filteredProperties = properties.filter((property) => {
@@ -159,6 +231,9 @@ export default function PropertyModerationPage() {
                 </div>
             </div>
 
+            {/* Property Overview Dashboard */}
+            <PropertyOverviewDashboard stats={stats} loading={statsLoading} />
+
             {/* Error banner */}
             {error && (
                 <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
@@ -196,6 +271,77 @@ export default function PropertyModerationPage() {
                 </nav>
             </div>
 
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <input
+                    type="text"
+                    placeholder="Search location, title, serial #..."
+                    className="flex-1 rounded-xl border border-border px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setPage(0);
+                    }}
+                />
+                <select
+                    className="rounded-xl border border-border px-4 py-2 text-sm focus:border-primary outline-none"
+                    value={categoryFilter}
+                    onChange={(e) => {
+                        setCategoryFilter(e.target.value);
+                        setSubtypeFilter("");
+                        setPage(0);
+                    }}
+                >
+                    <option value="All">All Categories</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial</option>
+                </select>
+                <select
+                    className="rounded-xl border border-border px-4 py-2 text-sm focus:border-primary outline-none"
+                    value={listingTypeFilter}
+                    onChange={(e) => {
+                        setListingTypeFilter(e.target.value);
+                        setPage(0);
+                    }}
+                >
+                    <option value="All">All Listing Types</option>
+                    <option value="sell">Buy / Sale</option>
+                    <option value="rent">Rent</option>
+                </select>
+                {categoryFilter !== "All" && (
+                    <select
+                        className="rounded-xl border border-border px-4 py-2 text-sm focus:border-primary outline-none"
+                        value={subtypeFilter}
+                        onChange={(e) => {
+                            setSubtypeFilter(e.target.value);
+                            setPage(0);
+                        }}
+                    >
+                        <option value="">All Subtypes</option>
+                        {categoryFilter === "Commercial" && commercialSubtypes.map(st => (
+                            <option key={st} value={st}>{st}</option>
+                        ))}
+                        {categoryFilter === "Residential" && residentialSubtypes.map(st => (
+                            <option key={st} value={st}>{st}</option>
+                        ))}
+                    </select>
+                )}
+                {(categoryFilter !== "All" || subtypeFilter !== "" || listingTypeFilter !== "All" || searchQuery !== "") && (
+                    <button
+                        onClick={() => {
+                            setCategoryFilter("All");
+                            setSubtypeFilter("");
+                            setListingTypeFilter("All");
+                            setSearchQuery("");
+                            setPage(0);
+                        }}
+                        className="text-sm font-medium text-text-muted hover:text-primary transition-colors px-2 shrink-0"
+                    >
+                        Clear Filters
+                    </button>
+                )}
+            </div>
+
             {/* Content */}
             {loading ? (
                 <div className="bg-white border border-border rounded-xl shadow-sm p-8">
@@ -212,6 +358,7 @@ export default function PropertyModerationPage() {
                         onReject={handleReject}
                         onDelete={handleDelete}
                         onViewDetails={handleViewDetails}
+                        onEdit={handleEdit}
                         actionLoading={actionLoading}
                     />
                     <AdminPagination
@@ -228,6 +375,13 @@ export default function PropertyModerationPage() {
                 isOpen={isDetailModalOpen}
                 onClose={() => setIsDetailModalOpen(false)}
                 property={selectedProperty}
+            />
+
+            <EditListingModal
+                isOpen={isEditModalOpen}
+                onClose={() => { setIsEditModalOpen(false); setEditProperty(null); }}
+                property={editProperty}
+                onSaveSuccess={handleEditSaveSuccess}
             />
         </div>
     );

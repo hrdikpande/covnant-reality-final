@@ -6,7 +6,7 @@ import { JsonLd, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
 import { PropertyCard } from "@/components/ui/PropertyCard";
 
-export const revalidate = 0; // SSR
+export const revalidate = 60; // Revalidate every 60 seconds for fast loads
 
 async function getBlogData(slug: string) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';

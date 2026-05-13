@@ -23,11 +23,20 @@ export interface UsePropertySearchReturn {
     retry: () => void;
 }
 
-export function usePropertySearch(): UsePropertySearchReturn {
-    const searchParams = useSearchParams();
+/** Parse a single URL param as a positive integer, or undefined */
+function parseIntParam(
+    searchParams: URLSearchParams,
+    key: string
+): number | undefined {
+    const raw = searchParams.get(key);
+    if (!raw) return undefined;
+    const n = Number(raw);
+    return isNaN(n) || n <= 0 ? undefined : n;
+}
 
-    // Initialize filters from URL search params
-    const initialFilters = useRef<SearchFilters>({
+/** Build a SearchFilters object from URLSearchParams */
+function filtersFromParams(searchParams: URLSearchParams): SearchFilters {
+    return {
         city: searchParams.get("location") || undefined,
         cityId: searchParams.get("cityId") || undefined,
         stateId: searchParams.get("stateId") || undefined,
@@ -39,16 +48,41 @@ export function usePropertySearch(): UsePropertySearchReturn {
             return undefined;
         })(),
         property_type: searchParams.get("category") || undefined,
-        subtype: searchParams.get("subtype") || undefined,
-        bedrooms: searchParams.get("bedrooms")
-            ? Number(searchParams.get("bedrooms"))
+        subtypes: searchParams.get("subtypes")
+            ? searchParams.get("subtypes")!.split(",").filter(Boolean)
             : undefined,
-        is_verified: searchParams.get("verified") === "true" ? true : undefined,
+        bedrooms: parseIntParam(searchParams, "bedrooms"),
+        is_verified:
+            searchParams.get("verified") === "true" ? true : undefined,
         agentId: searchParams.get("agent") || undefined,
         sort_by: "newest",
-    });
+        // New filters
+        price_min: parseIntParam(searchParams, "priceMin"),
+        price_max: parseIntParam(searchParams, "priceMax"),
+        area_min: parseIntParam(searchParams, "areaMin"),
+        area_max: parseIntParam(searchParams, "areaMax"),
+        furnishing: searchParams.get("furnishing") || undefined,
+        possession: searchParams.get("possession") || undefined,
+        extra_locations: searchParams.get("extraLocations")
+            ? searchParams
+                  .get("extraLocations")!
+                  .split(",")
+                  .filter(Boolean)
+            : undefined,
+    };
+}
 
-    const [filters, setFilters] = useState<SearchFilters>(initialFilters.current);
+export function usePropertySearch(): UsePropertySearchReturn {
+    const searchParams = useSearchParams();
+
+    // Initialize filters from URL search params
+    const initialFilters = useRef<SearchFilters>(
+        filtersFromParams(searchParams)
+    );
+
+    const [filters, setFilters] = useState<SearchFilters>(
+        initialFilters.current
+    );
     const [results, setResults] = useState<SearchProperty[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -59,26 +93,7 @@ export function usePropertySearch(): UsePropertySearchReturn {
 
     // Sync external URL changes (e.g. clicking header links) to internal filters
     useEffect(() => {
-        setFilters({
-            city: searchParams.get("location") || undefined,
-            cityId: searchParams.get("cityId") || undefined,
-            stateId: searchParams.get("stateId") || undefined,
-            localityId: searchParams.get("localityId") || undefined,
-            listing_type: (() => {
-                const t = searchParams.get("type");
-                if (t === "buy") return "sell";
-                if (t === "rent") return "rent";
-                return undefined;
-            })(),
-            property_type: searchParams.get("category") || undefined,
-            subtype: searchParams.get("subtype") || undefined,
-            bedrooms: searchParams.get("bedrooms")
-                ? Number(searchParams.get("bedrooms"))
-                : undefined,
-            is_verified: searchParams.get("verified") === "true" ? true : undefined,
-            agentId: searchParams.get("agent") || undefined,
-            sort_by: "newest",
-        });
+        setFilters(filtersFromParams(searchParams));
         setPage(0);
     }, [searchParams, searchParamsString]);
 
@@ -115,7 +130,9 @@ export function usePropertySearch(): UsePropertySearchReturn {
                 if (err instanceof Error && err.name === "AbortError") return;
                 if (!controller.signal.aborted) {
                     setError(
-                        err instanceof Error ? err.message : "Something went wrong"
+                        err instanceof Error
+                            ? err.message
+                            : "Something went wrong"
                     );
                     setResults([]);
                     setTotalCount(0);

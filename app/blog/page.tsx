@@ -6,7 +6,7 @@ import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { Blog } from "@/types";
 
-export const revalidate = 0; // Disable static rendering to ensure SSR
+export const revalidate = 60; // Revalidate every 60 seconds for fast loads
 
 export const metadata: Metadata = buildMetadata("blog");
 

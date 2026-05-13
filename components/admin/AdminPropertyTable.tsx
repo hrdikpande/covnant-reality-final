@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Check, X, MapPin, Loader2, Trash2, ExternalLink } from "lucide-react";
+import { MoreVertical, Check, X, MapPin, Loader2, Trash2, ExternalLink, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AdminProperty } from "@/lib/supabase/admin";
 
@@ -11,6 +11,7 @@ interface AdminPropertyTableProps {
     onReject: (id: string) => void;
     onDelete?: (id: string) => void;
     onViewDetails?: (property: AdminProperty) => void;
+    onEdit?: (property: AdminProperty) => void;
     actionLoading: string | null;
 }
 
@@ -40,6 +41,20 @@ const getStatusLabel = (status: AdminProperty["status"]) => {
         case "rented": return "Rented";
         default: return status;
     }
+};
+
+const formatAddress = (property: AdminProperty) => {
+    const parts = [property.address, property.locality, property.city, property.state, property.pincode];
+    return parts.filter(p => p && p.trim() !== "").join(", ");
+};
+
+const formatType = (property: AdminProperty) => {
+    const category = property.property_type;
+    const subtype = property.commercial_type || "";
+    if (category.toLowerCase() === "commercial" && subtype) {
+        return `Commercial • ${subtype}`;
+    }
+    return category;
 };
 
 const getRoleBadge = (role: string | null) => {
@@ -79,6 +94,7 @@ export function AdminPropertyTable({
     onReject,
     onDelete,
     onViewDetails,
+    onEdit,
     actionLoading,
 }: AdminPropertyTableProps) {
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -114,12 +130,15 @@ export function AdminPropertyTable({
                                 >
                                     {property.title}
                                 </button>
-                                <div className="flex items-center text-text-muted text-xs">
-                                    <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
-                                    <span className="truncate">{property.address}, {property.city}</span>
+                                <div className="text-xs text-text-secondary mt-1">
+                                    <span className="font-semibold mr-2">#{property.serial_number || "-"}</span>
                                 </div>
-                                <span className="text-primary font-semibold text-xs mt-1">
-                                    {formatPrice(property.price)} · {property.property_type}
+                                <div className="flex items-center text-text-muted text-xs mt-1">
+                                    <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
+                                    <span className="truncate">{formatAddress(property)}</span>
+                                </div>
+                                <span className="text-primary font-semibold text-xs mt-1 capitalize">
+                                    {formatPrice(property.price)} · {formatType(property)}
                                 </span>
                             </div>
 
@@ -160,6 +179,15 @@ export function AdminPropertyTable({
                                         <Loader2 className="w-4 h-4 animate-spin text-primary" />
                                     ) : (
                                         <>
+                                            {onEdit && (
+                                                <button
+                                                    onClick={() => onEdit(property)}
+                                                    className="p-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors"
+                                                    aria-label="Edit"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                            )}
                                             {(property.status === "pending" || property.status === "rejected") && (
                                                 <button
                                                     onClick={() => handleAction(property.id, "approve")}
@@ -196,7 +224,8 @@ export function AdminPropertyTable({
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-slate-50 border-b border-border">
-                            <th className="px-6 py-4 font-semibold text-text-secondary w-1/3 min-w-[320px]">Property Listing</th>
+                            <th className="px-6 py-4 font-semibold text-text-secondary w-16 whitespace-nowrap"># Serial</th>
+                            <th className="px-6 py-4 font-semibold text-text-secondary w-1/3 min-w-[280px]">Property Listing</th>
                             <th className="px-6 py-4 font-semibold text-text-secondary whitespace-nowrap">Posted By</th>
                             <th className="px-6 py-4 font-semibold text-text-secondary whitespace-nowrap">Type</th>
                             <th className="px-6 py-4 font-semibold text-text-secondary whitespace-nowrap">City</th>
@@ -209,6 +238,9 @@ export function AdminPropertyTable({
                         {properties.length > 0 ? (
                             properties.map((property) => (
                                 <tr key={property.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 py-4 font-medium text-text-secondary">
+                                        {property.serial_number || "-"}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col min-w-0 py-0.5">
                                             <button
@@ -220,24 +252,25 @@ export function AdminPropertyTable({
                                             </button>
                                             <div className="flex items-center text-text-muted text-xs mt-1">
                                                 <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
-                                                <span className="truncate">{property.address}, {property.city}</span>
+                                                <span className="truncate">{formatAddress(property)}</span>
                                             </div>
                                             <div className="text-primary font-semibold text-xs mt-1.5 flex items-center gap-2">
                                                 {formatPrice(property.price)}
-                                                <span className="w-1 h-1 rounded-full bg-border" />
-                                                <span className="text-text-secondary font-medium capitalize">{property.property_type}</span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="font-semibold text-text-primary block">{property.owner_name ?? "Unknown"}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
                                         <span className={cn(
-                                            "px-2.5 py-1 text-[11px] font-semibold tracking-wider rounded-md capitalize",
+                                            "mt-1 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider rounded-md capitalize inline-block",
                                             getRoleBadge(property.owner_role)
                                         )}>
                                             {property.owner_role ?? "N/A"}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className="text-sm font-medium text-text-primary capitalize">
+                                            {formatType(property)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 font-medium text-text-primary">
@@ -282,6 +315,15 @@ export function AdminPropertyTable({
                                                                     <ExternalLink className="mr-2 h-4 w-4 text-primary" />
                                                                     View Details
                                                                 </button>
+                                                                {onEdit && (
+                                                                    <button
+                                                                        onClick={() => { setOpenDropdownId(null); onEdit(property); }}
+                                                                        className="flex items-center w-full px-4 py-2.5 text-sm text-text-primary hover:bg-slate-50 font-medium"
+                                                                    >
+                                                                        <Pencil className="mr-2 h-4 w-4 text-amber-600" />
+                                                                        Edit Listing
+                                                                    </button>
+                                                                )}
                                                                 {(property.status === "pending" || property.status === "rejected") && (
                                                                     <button
                                                                         onClick={() => handleAction(property.id, "approve")}

@@ -32,7 +32,7 @@ export function Header() {
 
     return (
         <>
-            <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-100">
+            <header className="sticky top-0 z-[90] bg-white shadow-sm border-b border-slate-100">
                 <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                     {/* Logo & Desktop Nav */}
                     <div className="flex items-center gap-8 lg:gap-10">
@@ -129,8 +129,8 @@ export function Header() {
 
                 {/* Mobile Navigation Menu */}
                 <div className={cn(
-                    "lg:hidden fixed inset-0 z-[60] bg-white transition-transform duration-300 ease-in-out",
-                    isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+                    "lg:hidden fixed inset-0 z-[100] bg-white transition-transform duration-300 ease-in-out",
+                    isMobileMenuOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
                 )}>
                     <div className="flex flex-col h-full">
                         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">

@@ -1,12 +1,11 @@
 "use client";
 
-import { Search, ChevronDown, MapPin, X } from "lucide-react";
+import { Search, ChevronDown, MapPin, X, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/components/AuthContext";
 import { SearchLocationResult, searchLocations, getPropertyLocations, PropertyLocationSuggestion } from "@/lib/api/locations";
 import { extractLocationRoot } from "@/lib/locationUtils";
 
@@ -15,7 +14,6 @@ import { extractLocationRoot } from "@/lib/locationUtils";
 const PRIMARY_TABS = [
     { label: "Buy", value: "buy" },
     { label: "Rent", value: "rent" },
-    { label: "Sell", value: "sell" },
 ] as const;
 
 const RESIDENTIAL_SUBTYPES = [
@@ -40,10 +38,12 @@ const COMMERCIAL_SUBTYPES = [
     "Cold Storage",
     "Factory & Manufacturing",
     "Hotel/Resorts",
+    "Industrial Shed",
+    "RCC Shed",
+    "Godown",
 ] as const;
 
-type PrimaryTab = "buy" | "rent" | "sell";
-type CategoryTab = "residential" | "commercial";
+type PrimaryTab = "buy" | "rent";
 
 // ─── Portal helpers ───────────────────────────────────────────────────────────
 
@@ -84,30 +84,27 @@ function useDropdownStyle(
     return style;
 }
 
-// ─── Category Dropdown ────────────────────────────────────────────────────────
+// ─── Category Dropdown (multi-select) ─────────────────────────────────────────
 
 interface CategoryDropdownProps {
     label: string;
     subtypes: readonly string[];
-    isActive: boolean;
-    onToggle: () => void;
-    selectedSub: string | null;
-    onSubSelect: (sub: string) => void;
+    selectedSubs: string[];
+    onSubToggle: (sub: string) => void;
     onClear: () => void;
 }
 
 function CategoryDropdown({
     label,
     subtypes,
-    isActive,
-    onToggle,
-    selectedSub,
-    onSubSelect,
+    selectedSubs,
+    onSubToggle,
     onClear,
 }: CategoryDropdownProps) {
     const [open, setOpen] = useState(false);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const hasSelections = selectedSubs.length > 0;
 
     // Close on outside click
     useEffect(() => {
@@ -134,10 +131,9 @@ function CategoryDropdown({
         return () => document.removeEventListener("keydown", handler);
     }, [open]);
 
-    const dropdownStyle = useDropdownStyle(buttonRef, open && isActive, 256);
+    const dropdownStyle = useDropdownStyle(buttonRef, open, 280);
 
     const handleClick = () => {
-        onToggle();
         setOpen((p) => !p);
     };
 
@@ -148,39 +144,40 @@ function CategoryDropdown({
                 type="button"
                 onClick={handleClick}
                 aria-haspopup="listbox"
-                aria-expanded={open && isActive}
+                aria-expanded={open}
                 className={cn(
                     "flex items-center gap-1.5 shrink-0 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl",
                     "text-sm font-medium transition-all select-none",
                     "min-h-[40px] touch-manipulation",
-                    isActive
-                        ? "bg-primary/20 text-primary ring-2 ring-primary/40 brightness-95"
+                    hasSelections
+                        ? "bg-primary/10 text-primary ring-2 ring-primary/30 border border-primary/20"
                         : "bg-slate-200/80 text-slate-800 hover:bg-slate-300 hover:text-slate-950 font-bold"
                 )}
             >
-                <span className="truncate max-w-[96px] sm:max-w-none">
+                <span className="truncate max-w-[120px] sm:max-w-none">
                     {label}
-                    {selectedSub && isActive && (
-                        <span className="text-xs opacity-60 ml-1 hidden sm:inline">
-                            · {selectedSub}
+                    {hasSelections && (
+                        <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[11px] font-bold bg-primary text-white rounded-full">
+                            {selectedSubs.length}
                         </span>
                     )}
                 </span>
                 <ChevronDown
                     className={cn(
                         "h-4 w-4 shrink-0 transition-transform duration-200",
-                        open && isActive ? "rotate-180" : ""
+                        open ? "rotate-180" : ""
                     )}
                 />
             </button>
 
-            {open && isActive && typeof document !== "undefined" &&
+            {open && typeof document !== "undefined" &&
                 createPortal(
                     <div
                         ref={dropdownRef}
                         style={dropdownStyle}
                         role="listbox"
                         aria-label={`${label} type`}
+                        aria-multiselectable="true"
                         className="bg-white border border-slate-200 rounded-2xl shadow-2xl py-2
                                    animate-in fade-in slide-in-from-top-2 duration-150 overflow-hidden"
                     >
@@ -189,37 +186,53 @@ function CategoryDropdown({
                             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                                 {label} Type
                             </span>
-                            {selectedSub && (
+                            {hasSelections && (
                                 <button
                                     type="button"
-                                    onClick={() => { onClear(); setOpen(false); }}
+                                    onClick={() => { onClear(); }}
                                     className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-0.5 transition-colors"
                                 >
-                                    <X className="h-3 w-3" /> Clear
+                                    <X className="h-3 w-3" /> Clear all
                                 </button>
                             )}
                         </div>
 
                         {/* Options */}
                         <div className="max-h-64 overflow-y-auto overscroll-contain">
-                            {subtypes.map((sub) => (
-                                <button
-                                    key={sub}
-                                    type="button"
-                                    role="option"
-                                    aria-selected={selectedSub === sub}
-                                    onClick={() => { onSubSelect(sub); setOpen(false); }}
-                                    className={cn(
-                                        "w-full text-left px-4 py-2.5 text-sm transition-colors",
-                                        "min-h-[40px] touch-manipulation",
-                                        selectedSub === sub
-                                            ? "bg-primary/5 text-primary font-medium"
-                                            : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                                    )}
-                                >
-                                    {sub}
-                                </button>
-                            ))}
+                            {subtypes.map((sub) => {
+                                const isSelected = selectedSubs.includes(sub);
+                                return (
+                                    <button
+                                        key={sub}
+                                        type="button"
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        onClick={() => onSubToggle(sub)}
+                                        className={cn(
+                                            "w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-3",
+                                            "min-h-[40px] touch-manipulation",
+                                            isSelected
+                                                ? "bg-primary/5 text-primary font-medium"
+                                                : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                        )}
+                                    >
+                                        {/* Checkbox indicator */}
+                                        <span
+                                            className={cn(
+                                                "w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                                                isSelected
+                                                    ? "bg-primary border-primary"
+                                                    : "border-slate-300 bg-white"
+                                            )}
+                                        >
+                                            {isSelected && (
+                                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                            )}
+                                        </span>
+                                        {sub}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>,
                     document.body
@@ -235,16 +248,9 @@ function CategoryDropdown({
 
 export function HeroSearch() {
     const router = useRouter();
-    const { user, userRole } = useAuth();
-    const canPostProperty = userRole !== "buyer" && userRole !== "tenant";
-    const visibleTabs = useMemo(
-        () => canPostProperty ? PRIMARY_TABS : PRIMARY_TABS.filter((t) => t.value !== "sell"),
-        [canPostProperty]
-    );
     const [activeTab, setActiveTab] = useState<PrimaryTab>("buy");
-    const [activeCategory, setActiveCategory] = useState<CategoryTab | null>(null);
-    const [residentialSub, setResidentialSub] = useState<string | null>(null);
-    const [commercialSub, setCommercialSub] = useState<string | null>(null);
+    const [residentialSubs, setResidentialSubs] = useState<string[]>([]);
+    const [commercialSubs, setCommercialSubs] = useState<string[]>([]);
 
     // Autocomplete State
     const [location, setLocation] = useState("");
@@ -314,26 +320,50 @@ export function HeroSearch() {
         return () => clearTimeout(timeoutId);
     }, [location, selectedLocation, propertyLocations]);
 
+    // ─── Toggle helpers ────────────────────────────────────────────────────────
+    const toggleResidentialSub = (sub: string) => {
+        setResidentialSubs((prev) =>
+            prev.includes(sub) ? prev.filter((s) => s !== sub) : [...prev, sub]
+        );
+    };
+
+    const toggleCommercialSub = (sub: string) => {
+        setCommercialSubs((prev) =>
+            prev.includes(sub) ? prev.filter((s) => s !== sub) : [...prev, sub]
+        );
+    };
+
+    // ─── Slugify helper ────────────────────────────────────────────────────────
+    const slugify = (s: string) => s.toLowerCase().replace(/[/&,\s]+/g, "-");
+
     const handleSearch = () => {
-        if (activeTab === "sell") {
-            if (!user) {
-                router.push("/login?next=/post-property");
-            } else {
-                router.push("/post-property");
-            }
-            return;
-        }
         const params = new URLSearchParams();
         params.set("type", activeTab === "buy" ? "sell" : "rent");
-        if (activeCategory) params.set("category", activeCategory);
-        const sub = activeCategory === "residential" ? residentialSub : commercialSub;
-        if (sub) params.set("subtype", sub.toLowerCase().replace(/[/&,\s]+/g, "-"));
+
+        // Combine all selected subtypes from both categories
+        const allSubtypes = [...residentialSubs, ...commercialSubs];
+        if (allSubtypes.length > 0) {
+            params.set("subtypes", allSubtypes.map(slugify).join(","));
+        }
+
+        // Determine category context
+        const hasResidential = residentialSubs.length > 0;
+        const hasCommercial = commercialSubs.length > 0;
+        if (hasResidential && !hasCommercial) {
+            params.set("category", "residential");
+        } else if (hasCommercial && !hasResidential) {
+            params.set("category", "commercial");
+        }
+        // If both or neither, omit category
 
         if (selectedLocation) {
             // Pass the location name for fuzzy text matching (root word extracted in search layer)
             params.set("location", selectedLocation.name.toLowerCase());
         } else if (location.trim()) {
             params.set("location", location.trim().toLowerCase());
+        } else {
+            // No location provided — flag it so search page can show a banner
+            params.set("noLocation", "true");
         }
 
         router.push(`/search?${params.toString()}`);
@@ -384,9 +414,9 @@ export function HeroSearch() {
                 <div className="w-full max-w-4xl mx-auto">
                     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] p-4 sm:p-6 lg:p-8 border border-white/20">
 
-                        {/* ── Row 1: Buy / Rent / Sell ── */}
+                        {/* ── Row 1: Buy / Rent ── */}
                         <div className="flex items-center gap-2 mb-3 sm:mb-4" role="tablist" aria-label="Listing type">
-                            {visibleTabs.map((tab) => (
+                            {PRIMARY_TABS.map((tab) => (
                                 <button
                                     key={tab.value}
                                     type="button"
@@ -409,35 +439,21 @@ export function HeroSearch() {
                         {/* Divider */}
                         <div className="h-px bg-slate-100 mb-3 sm:mb-4" />
 
-                        {/* ── Row 2: Residential / Commercial ── */}
+                        {/* ── Row 2: Residential / Commercial (multi-select, independent) ── */}
                         <div className="flex items-center gap-2 mb-4 sm:mb-6" role="group" aria-label="Property category">
                             <CategoryDropdown
                                 label="Residential"
                                 subtypes={RESIDENTIAL_SUBTYPES}
-                                isActive={activeCategory === "residential"}
-                                onToggle={() =>
-                                    setActiveCategory((p: CategoryTab | null) => p === "residential" ? null : "residential")
-                                }
-                                selectedSub={residentialSub}
-                                onSubSelect={(sub) => {
-                                    setResidentialSub(sub);
-                                    setActiveCategory("residential");
-                                }}
-                                onClear={() => setResidentialSub(null)}
+                                selectedSubs={residentialSubs}
+                                onSubToggle={toggleResidentialSub}
+                                onClear={() => setResidentialSubs([])}
                             />
                             <CategoryDropdown
                                 label="Commercial"
                                 subtypes={COMMERCIAL_SUBTYPES}
-                                isActive={activeCategory === "commercial"}
-                                onToggle={() =>
-                                    setActiveCategory((p: CategoryTab | null) => p === "commercial" ? null : "commercial")
-                                }
-                                selectedSub={commercialSub}
-                                onSubSelect={(sub) => {
-                                    setCommercialSub(sub);
-                                    setActiveCategory("commercial");
-                                }}
-                                onClear={() => setCommercialSub(null)}
+                                selectedSubs={commercialSubs}
+                                onSubToggle={toggleCommercialSub}
+                                onClear={() => setCommercialSubs([])}
                             />
                         </div>
 
@@ -509,11 +525,11 @@ export function HeroSearch() {
                             <Button
                                 size="lg"
                                 onClick={handleSearch}
-                                aria-label={activeTab === "sell" ? "Post Property" : "Search Properties"}
+                                aria-label="Search Properties"
                                 className="w-full sm:w-auto h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-xl px-5 sm:px-8 whitespace-nowrap"
                             >
                                 <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-2 shrink-0" />
-                                {activeTab === "sell" ? "Post Property" : "Search"}
+                                Search
                             </Button>
                         </div>
                     </div>

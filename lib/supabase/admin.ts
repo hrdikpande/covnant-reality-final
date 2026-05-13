@@ -2,11 +2,13 @@
 
 export interface AdminProperty {
     id: string;
+    serial_number?: number;
     owner_id: string;
     title: string;
     description: string | null;
     listing_type: string;
     property_type: string;
+    commercial_type?: string | null;
     price: number;
     area_sqft: number;
     bedrooms: number | null;
@@ -16,6 +18,7 @@ export interface AdminProperty {
     locality: string | null;
     city: string;
     state: string | null;
+    pincode?: string | null;
     status: "pending" | "approved" | "rejected" | "sold" | "rented";
     is_verified: boolean;
     is_featured: boolean;
@@ -81,6 +84,10 @@ export interface AdminActivityLog {
 export interface PaginationParams {
     limit?: number;
     offset?: number;
+    category?: string;
+    subtype?: string;
+    listingType?: string;
+    search?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -118,10 +125,16 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<{ data: 
  * Fetch properties with owner info – paginated.
  */
 export async function fetchAdminProperties(
-    { limit = DEFAULT_LIMIT, offset = 0 }: PaginationParams = {}
+    { limit = DEFAULT_LIMIT, offset = 0, category, subtype, listingType, search }: PaginationParams = {}
 ): Promise<PaginatedResult<AdminProperty>> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (category) params.set("category", category);
+    if (subtype) params.set("subtype", subtype);
+    if (listingType) params.set("listingType", listingType);
+    if (search) params.set("search", search);
+
     const { data, error } = await apiFetch<{ data: AdminProperty[]; totalCount: number }>(
-        `/api/admin/properties?limit=${limit}&offset=${offset}`
+        `/api/admin/properties?${params.toString()}`
     );
     if (error || !data) return { data: null, totalCount: 0, error };
     return { data: data.data, totalCount: data.totalCount, error: null };
@@ -290,4 +303,115 @@ export async function fetchActivityLogs(
     );
     if (error || !data) return { data: null, error };
     return { data: data.data, error: null };
+}
+
+/* ── Property Stats (overview dashboard) ──────────────────────── */
+
+export interface PropertyStats {
+    total: number;
+    byListingType: {
+        sell: number;
+        rent: number;
+    };
+    byCategory: {
+        residential: {
+            total: number;
+            subtypes: Record<string, number>;
+        };
+        commercial: {
+            total: number;
+            subtypes: Record<string, number>;
+        };
+    };
+}
+
+/**
+ * Fetch aggregate property stats for the overview dashboard.
+ */
+export async function fetchPropertyStats(): Promise<{
+    data: PropertyStats | null;
+    error: string | null;
+}> {
+    const { data, error } = await apiFetch<PropertyStats>("/api/admin/properties/stats");
+    if (error || !data) return { data: null, error };
+    return { data, error: null };
+}
+
+/* ── Admin Property Edit ──────────────────────────────────────── */
+
+export interface AdminPropertyEditData {
+    id: string;
+    serial_number?: number;
+    owner_id: string;
+    title: string;
+    description: string | null;
+    listing_type: string;
+    property_type: string;
+    commercial_type: string | null;
+    price: number;
+    area_sqft: number;
+    area_value: number | null;
+    area_unit: string | null;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    furnishing: string | null;
+    facing: string | null;
+    floor: number | null;
+    total_floors: number | null;
+    possession_status: string | null;
+    address: string;
+    locality: string | null;
+    city: string;
+    state: string | null;
+    pincode: string | null;
+    status: string;
+    is_verified: boolean;
+    is_featured: boolean;
+    rera_number: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    contact_number: string | null;
+    whatsapp_number: string | null;
+    amenities: string[] | null;
+    allow_phone: boolean | null;
+    allow_whatsapp: boolean | null;
+    allow_chat: boolean | null;
+    landmark: string | null;
+    slug: string | null;
+    created_at: string;
+    property_media: { id: string; media_url: string; media_type: string }[];
+}
+
+/**
+ * Fetch full property details for admin editing.
+ */
+export async function fetchPropertyForAdminEdit(
+    propertyId: string
+): Promise<{
+    data: AdminPropertyEditData | null;
+    error: string | null;
+}> {
+    const { data, error } = await apiFetch<{ data: AdminPropertyEditData }>(
+        `/api/admin/properties/${propertyId}`
+    );
+    if (error || !data) return { data: null, error };
+    return { data: data.data, error: null };
+}
+
+/**
+ * Update a property via admin API (no ownership restriction).
+ */
+export async function updateAdminProperty(
+    propertyId: string,
+    updates: Record<string, unknown>
+): Promise<{ success: boolean; error: string | null }> {
+    const { data, error } = await apiFetch<{ success: boolean }>(
+        `/api/admin/properties/${propertyId}`,
+        {
+            method: "PATCH",
+            body: JSON.stringify({ updates }),
+        }
+    );
+    if (error || !data) return { success: false, error };
+    return { success: true, error: null };
 }

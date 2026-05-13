@@ -15,9 +15,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(Number(searchParams.get("limit") ?? "20"), 100);
     const offset = Number(searchParams.get("offset") ?? "0");
+    const category = searchParams.get("category");
+    const subtype = searchParams.get("subtype");
+    const listingType = searchParams.get("listingType");
+    const search = searchParams.get("search");
 
     const supabase = await createClient();
-    const { data, error, count } = await supabase
+    let query = supabase
         .from("properties")
         .select(
             `
@@ -25,7 +29,39 @@ export async function GET(request: NextRequest) {
             profiles!properties_owner_id_fkey ( full_name, role )
         `,
             { count: "exact" }
-        )
+        );
+
+    // Apply category & subtype filters
+    if (category && category !== "All") {
+        if (category.toLowerCase() === "residential") {
+            query = query.in("property_type", ["apartment", "house", "villa"]);
+            if (subtype) {
+                query = query.eq("property_type", subtype.toLowerCase());
+            }
+        } else if (category.toLowerCase() === "commercial") {
+            query = query.eq("property_type", "commercial");
+            if (subtype) {
+                query = query.eq("commercial_type", subtype);
+            }
+        }
+    }
+
+    // Apply listing type filter (sell vs rent)
+    if (listingType && listingType !== "All") {
+        query = query.eq("listing_type", listingType);
+    }
+
+    // Apply search filter
+    if (search) {
+        const isNumeric = !isNaN(Number(search)) && search.trim() !== "";
+        if (isNumeric) {
+            query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,locality.ilike.%${search}%,city.ilike.%${search}%,pincode.ilike.%${search}%,serial_number.eq.${search}`);
+        } else {
+            query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,locality.ilike.%${search}%,city.ilike.%${search}%,pincode.ilike.%${search}%`);
+        }
+    }
+
+    const { data, error, count } = await query
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -37,11 +73,13 @@ export async function GET(request: NextRequest) {
         const profile = row.profiles as Record<string, unknown> | null;
         return {
             id: row.id as string,
+            serial_number: row.serial_number as number | undefined,
             owner_id: row.owner_id as string,
             title: row.title as string,
             description: row.description as string | null,
             listing_type: row.listing_type as string,
             property_type: row.property_type as string,
+            commercial_type: row.commercial_type as string | null,
             price: row.price as number,
             area_sqft: row.area_sqft as number,
             bedrooms: row.bedrooms as number | null,
@@ -51,6 +89,7 @@ export async function GET(request: NextRequest) {
             locality: row.locality as string | null,
             city: row.city as string,
             state: row.state as string | null,
+            pincode: row.pincode as string | null,
             status: row.status as string,
             is_verified: row.is_verified as boolean,
             is_featured: row.is_featured as boolean,

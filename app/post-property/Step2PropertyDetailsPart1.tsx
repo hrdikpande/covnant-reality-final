@@ -27,14 +27,21 @@ const BHK_OPTIONS = [
 ];
 
 const COMMERCIAL_TYPES = [
-    "Office",
-    "Retail Shop",
+    "Ready to Move Offices",
+    "Bare Shell Offices",
+    "Shops & Retail",
+    "Commercial/Inst. Land",
+    "Agricultural/Farm Land",
+    "Industrial Land/Plots",
     "Warehouse",
-    "Industrial Land",
+    "Cold Storage",
+    "Factory & Manufacturing",
+    "Hotel/Resorts",
+    "Industrial Shed",
+    "RCC Shed",
+    "Godown",
     "Showroom",
-    "Commercial Plot",
     "Co-working Space",
-    "Hotel",
     "Other",
 ];
 
@@ -115,7 +122,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                 {/* 2. Property Type + 3. BHK — 2-col on md */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                     {/* 2. Property Type */}
-                    <div className="flex flex-col gap-2 relative z-20">
+                    <div className="flex flex-col gap-2 relative z-[70]">
                         <label className="text-sm font-medium text-text-primary">
                             Property Type
                         </label>
@@ -124,6 +131,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                             onClick={() => {
                                 setIsTypeOpen(!isTypeOpen);
                                 setIsBhkOpen(false);
+                                setIsCommercialTypeOpen(false);
                             }}
                             className={cn(
                                 "flex items-center justify-between w-full h-12 px-4 bg-white border rounded-xl text-left transition-colors",
@@ -135,7 +143,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                             <ChevronDown className={cn("w-4 h-4 text-text-muted transition-transform", isTypeOpen && "rotate-180")} />
                         </button>
                         {isTypeOpen && (
-                            <div className="absolute top-[76px] left-0 w-full bg-white border border-border rounded-xl shadow-lg overflow-hidden py-1 z-30">
+                            <div className="absolute top-[76px] left-0 w-full max-h-60 overflow-y-auto bg-white border border-border rounded-xl shadow-lg py-1 z-[80]">
                                 {PROPERTY_TYPES.map((type) => (
                                     <button
                                         key={type}
@@ -154,7 +162,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                     </div>
 
                     {/* 3. BHK (Custom Dropdown) */}
-                    <div className="flex flex-col gap-2 relative z-10">
+                    <div className="flex flex-col gap-2 relative z-[65]">
                         <label className="text-sm font-medium text-text-primary">
                             BHK Type
                         </label>
@@ -163,6 +171,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                             onClick={() => {
                                 setIsBhkOpen(!isBhkOpen);
                                 setIsTypeOpen(false);
+                                setIsCommercialTypeOpen(false);
                             }}
                             disabled={formData.propertyType === "Plot" || formData.propertyType === "Commercial"}
                             className={cn(
@@ -180,7 +189,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                             <ChevronDown className={cn("w-4 h-4 text-text-muted transition-transform", isBhkOpen && "rotate-180")} />
                         </button>
                         {isBhkOpen && (
-                            <div className="absolute top-[76px] left-0 w-full bg-white border border-border rounded-xl shadow-lg overflow-hidden py-1 z-30">
+                            <div className="absolute top-[76px] left-0 w-full max-h-60 overflow-y-auto bg-white border border-border rounded-xl shadow-lg py-1 z-[80]">
                                 {BHK_OPTIONS.map((bhk) => (
                                     <button
                                         key={bhk}
@@ -198,7 +207,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
 
                 {/* Commercial Property Type (visible only when Commercial is selected) */}
                 {formData.propertyType === "Commercial" && (
-                    <div className="flex flex-col gap-2 relative z-10">
+                    <div className="flex flex-col gap-2 relative z-[60]">
                         <label className="text-sm font-medium text-text-primary">
                             Commercial Property Type
                         </label>
@@ -219,7 +228,7 @@ export function Step2PropertyDetailsPart1({ formData, updateFormData, showErrors
                             <ChevronDown className={cn("w-4 h-4 text-text-muted transition-transform", isCommercialTypeOpen && "rotate-180")} />
                         </button>
                         {isCommercialTypeOpen && (
-                            <div className="absolute top-[76px] left-0 w-full bg-white border border-border rounded-xl shadow-lg overflow-hidden py-1 z-30">
+                            <div className="absolute top-[76px] left-0 w-full max-h-60 overflow-y-auto bg-white border border-border rounded-xl shadow-lg py-1 z-[80]">
                                 {COMMERCIAL_TYPES.map((ct) => (
                                     <button
                                         key={ct}

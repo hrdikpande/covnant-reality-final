@@ -13,6 +13,7 @@ export interface Property {
     area: number; // in sq ft
     area_value?: number;
     area_unit?: string;
+    serial_number?: number;
     image: string;
     images: string[];
     videos: string[];
@@ -187,6 +188,7 @@ export interface SearchProperty {
     created_at: string;
     total_count: number;
     image_url?: string | null;
+    serial_number?: number;
     commercial_type?: string | null;
     price_per_sqft?: number | null;
     slug?: string | null;
@@ -204,10 +206,17 @@ export interface SearchFilters {
     bedrooms?: number;
     listing_type?: string;
     property_type?: string;
-    subtype?: string;
+    subtypes?: string[];
     is_verified?: boolean;
     sort_by?: "newest" | "price_low" | "price_high";
     agentId?: string;
+    price_min?: number;
+    price_max?: number;
+    area_min?: number;
+    area_max?: number;
+    furnishing?: string;
+    possession?: string;
+    extra_locations?: string[];
 }
 
 // ─── Review Types ───────────────────────────────────────────────────────────

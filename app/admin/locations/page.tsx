@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { State, City, Locality, getStates, getCitiesByState, getLocalitiesByCity, clearLocationsCache } from "@/lib/api/locations";
-import { Trash2, Plus, AlertCircle, Loader2 } from "lucide-react";
+import { Trash2, Plus, AlertCircle, Loader2, Search } from "lucide-react";
 
 export default function AdminLocationsPage() {
     const supabase = createClient();
@@ -14,6 +14,7 @@ export default function AdminLocationsPage() {
     const [selectedCity, setSelectedCity] = useState<string>("");
 
     const [localities, setLocalities] = useState<Locality[]>([]);
+    const [localitySearch, setLocalitySearch] = useState<string>("");
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function AdminLocationsPage() {
     useEffect(() => {
         if (selectedCity) loadLocalities(selectedCity);
         else setLocalities([]);
+        setLocalitySearch("");
     }, [selectedCity]);
 
     const loadStates = async () => {
@@ -270,20 +272,41 @@ export default function AdminLocationsPage() {
                                 </div>
                             </form>
 
-                            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                {localities.length === 0 && <p className="text-sm text-text-muted italic">No localities found.</p>}
-                                {localities.map(loc => (
-                                    <div key={loc.id} className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border bg-slate-50 gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-text-primary truncate">{loc.name}</p>
-                                            <p className="text-xs text-text-muted font-mono">{loc.pincode}</p>
+                            {(() => {
+                                const filtered = localities.filter(loc => 
+                                    loc.name.toLowerCase().includes(localitySearch.toLowerCase()) || 
+                                    loc.pincode.includes(localitySearch)
+                                );
+                                return (
+                                    <>
+                                        <div className="relative mb-3">
+                                            <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search localities or pincode..."
+                                                value={localitySearch}
+                                                onChange={e => setLocalitySearch(e.target.value)}
+                                                className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-slate-50/50"
+                                            />
                                         </div>
-                                        <button onClick={() => handleDeleteLocality(loc.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+
+                                        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                                            {filtered.length === 0 && <p className="text-sm text-text-muted italic">No localities found.</p>}
+                                            {filtered.map(loc => (
+                                                <div key={loc.id} className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border bg-slate-50 gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-sm font-medium text-text-primary truncate">{loc.name}</p>
+                                                        <p className="text-xs text-text-muted font-mono">{loc.pincode}</p>
+                                                    </div>
+                                                    <button onClick={() => handleDeleteLocality(loc.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </>
                     )}
                 </div>

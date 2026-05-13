@@ -1,12 +1,13 @@
 'use client';
 
-import { ArrowLeft, SlidersHorizontal, ArrowUpDown, SearchX, AlertTriangle, Bookmark, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, ArrowUpDown, SearchX, AlertTriangle, Bookmark, ChevronLeft, ChevronRight, RefreshCw, Info } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePropertySearch } from '@/hooks/usePropertySearch';
 import { FilterDrawer } from '@/components/ui/FilterDrawer';
 import { FilterContent } from '@/components/ui/FilterContent';
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { formatPropertyTitle } from '@/lib/utils';
 import { isCorruptedLocation } from '@/lib/locationUtils';
@@ -345,6 +346,7 @@ function SaveSearchButton({ filters }: { filters: SearchFilters }) {
 // ─── Main SearchContent ─────────────────────────────────────────────────────
 
 export function SearchContent() {
+    const searchParams = useSearchParams();
     const {
         results,
         totalCount,
@@ -359,6 +361,8 @@ export function SearchContent() {
     } = usePropertySearch();
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+    const noLocation = searchParams.get('noLocation') === 'true' && !filters.city;
 
     const displayLocation = filters.city
         ? filters.city.charAt(0).toUpperCase() + filters.city.slice(1)
@@ -444,6 +448,16 @@ export function SearchContent() {
                     </div>
                 </div>
 
+                {/* No-location info banner */}
+                {noLocation && !loading && results.length > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-3 mb-6 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
+                        <Info className="w-4 h-4 shrink-0" />
+                        <span>
+                            Showing results across all locations. Enter a city or locality to narrow down results.
+                        </span>
+                    </div>
+                )}
+
                 {/* Active Filters / Badges */}
                 <div className="flex flex-wrap items-center gap-2 mb-6">
                     {filters.listing_type && (
@@ -456,12 +470,41 @@ export function SearchContent() {
                             {filters.city}
                         </span>
                     )}
-
+                    {filters.subtypes && filters.subtypes.length > 0 && filters.subtypes.map((sub) => (
+                        <span key={sub} className="px-3.5 py-1.5 bg-purple-50 text-purple-700 text-sm font-medium rounded-full border border-purple-200 shadow-sm capitalize">
+                            {sub.replace(/-/g, ' ')}
+                        </span>
+                    ))}
                     {filters.bedrooms != null && (
                         <span className="px-3.5 py-1.5 bg-white text-text-secondary text-sm font-medium rounded-full border border-border shadow-sm">
                             {filters.bedrooms}+ BHK
                         </span>
                     )}
+                    {(filters.price_min || filters.price_max) && (
+                        <span className="px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-medium rounded-full border border-amber-200 shadow-sm">
+                            ₹{filters.price_min ? filters.price_min.toLocaleString('en-IN') : '0'} – ₹{filters.price_max ? filters.price_max.toLocaleString('en-IN') : '∞'}
+                        </span>
+                    )}
+                    {(filters.area_min || filters.area_max) && (
+                        <span className="px-3.5 py-1.5 bg-cyan-50 text-cyan-700 text-sm font-medium rounded-full border border-cyan-200 shadow-sm">
+                            {filters.area_min ?? '0'} – {filters.area_max ?? '∞'} sq.ft
+                        </span>
+                    )}
+                    {filters.furnishing && (
+                        <span className="px-3.5 py-1.5 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-full border border-indigo-200 shadow-sm capitalize">
+                            {filters.furnishing.replace(/_/g, ' ')}
+                        </span>
+                    )}
+                    {filters.possession && (
+                        <span className="px-3.5 py-1.5 bg-teal-50 text-teal-700 text-sm font-medium rounded-full border border-teal-200 shadow-sm capitalize">
+                            {filters.possession.replace(/_/g, ' ')}
+                        </span>
+                    )}
+                    {filters.extra_locations && filters.extra_locations.length > 0 && filters.extra_locations.map((loc) => (
+                        <span key={loc} className="px-3.5 py-1.5 bg-orange-50 text-orange-700 text-sm font-medium rounded-full border border-orange-200 shadow-sm capitalize">
+                            + {loc}
+                        </span>
+                    ))}
                     {filters.is_verified && (
                         <span className="px-3.5 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-full border border-green-200 shadow-sm">
                             Verified Only
