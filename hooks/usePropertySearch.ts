@@ -43,7 +43,7 @@ function filtersFromParams(searchParams: URLSearchParams): SearchFilters {
         localityId: searchParams.get("localityId") || undefined,
         listing_type: (() => {
             const t = searchParams.get("type");
-            if (t === "buy") return "sell";
+            if (t === "buy" || t === "sell") return "sell";
             if (t === "rent") return "rent";
             return undefined;
         })(),

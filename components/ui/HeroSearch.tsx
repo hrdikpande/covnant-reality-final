@@ -248,7 +248,7 @@ function CategoryDropdown({
 
 export function HeroSearch() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<PrimaryTab>("buy");
+    const [activeTab, setActiveTab] = useState<PrimaryTab>("rent");
     const [residentialSubs, setResidentialSubs] = useState<string[]>([]);
     const [commercialSubs, setCommercialSubs] = useState<string[]>([]);
 
