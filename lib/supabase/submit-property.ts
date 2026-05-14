@@ -262,6 +262,20 @@ export async function submitProperty(
     // 1. Build payload & call RPC
     const payload = mapFormDataToRpcPayload(formData);
 
+    // Pre-check: verify locality_id actually exists in the DB to avoid FK violations
+    if (payload.locality_id) {
+        const { data: locCheck } = await supabase
+            .from("localities")
+            .select("id")
+            .eq("id", payload.locality_id)
+            .maybeSingle();
+
+        if (!locCheck) {
+            // Locality was deleted or doesn't exist — clear it to avoid FK error
+            payload.locality_id = null;
+        }
+    }
+
     const { data: rpcData, error: rpcError } = await supabase.rpc(
         "submit_property",
         { p_property: payload }
