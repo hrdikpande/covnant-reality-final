@@ -19,8 +19,8 @@ export default function OwnerPage() {
     return (
         <>
             <OwnerSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-            <main className="flex-1 w-full lg:max-w-[calc(100vw-256px)] bg-slate-50 relative pb-20 lg:pb-0 min-h-screen">
-                <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 w-full max-w-full overflow-x-hidden">
+            <main className="flex-1 w-full lg:max-w-[calc(100vw-256px)] bg-slate-50 relative min-h-screen">
+                <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8 w-full overflow-x-hidden">
                     {/* Header based on tab */}
                     <header className="mb-6 md:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <h1 className="text-2xl md:text-3xl font-bold text-text-primary capitalize flex items-center gap-3">

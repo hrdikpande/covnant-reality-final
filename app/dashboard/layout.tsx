@@ -16,7 +16,7 @@ export default function DashboardLayout({
 }) {
     return (
         <RoleGuard allowedRoles={["buyer", "tenant"]}>
-            <div className="flex min-h-screen bg-bg">
+            <div className="flex flex-col lg:flex-row min-h-screen bg-bg">
                 {children}
 
                 {/* Dashboard Footer — only visible when scrolled to bottom */}

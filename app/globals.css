@@ -132,3 +132,66 @@ body {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* ─── Custom Scrollbar for filter panels ─────────────────────────────────── */
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+}
+
+/* ─── Mobile Touch Optimizations ─────────────────────────────────────────── */
+
+@supports (height: 100dvh) {
+  .h-dvh {
+    height: 100dvh;
+  }
+}
+
+/* Prevent rubber-band overscroll on iOS */
+html {
+  overscroll-behavior: none;
+}
+
+/* Improve tap targets for mobile — scoped to nav and form areas */
+@media (max-width: 640px) {
+  nav button,
+  nav a,
+  form button,
+  .filter-drawer button,
+  .dashboard-tabs button {
+    min-height: 44px;
+  }
+
+  /* Slightly smaller text for filter badges on very small screens */
+  .filter-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.625rem;
+  }
+}
+
+/* ─── Mobile-optimized number inputs ─────────────────────────────────────── */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

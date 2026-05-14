@@ -23,46 +23,85 @@ export function FilterDrawer({ isOpen, onClose, filters, onFilterChange }: Filte
         };
     }, [isOpen]);
 
+    const handleReset = () => {
+        onFilterChange({
+            listing_type: undefined,
+            property_type: undefined,
+            subtypes: undefined,
+            bedrooms: undefined,
+            price_min: undefined,
+            price_max: undefined,
+            area_min: undefined,
+            area_max: undefined,
+            furnishing: undefined,
+            possession: undefined,
+            is_verified: undefined,
+            extra_locations: undefined,
+        });
+    };
+
     return (
         <>
             {/* Backdrop Overlay */}
             <div
-                className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 bg-black/50 z-[100] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                 onClick={onClose}
+                aria-hidden="true"
             />
 
-            {/* Drawer */}
+            {/* Drawer — full-screen on mobile, bottom sheet on tablets */}
             <div
-                className={`fixed bottom-0 left-0 right-0 w-full bg-white z-50 rounded-t-3xl shadow-xl transform transition-transform duration-300 ease-in-out md:max-w-md md:mx-auto md:bottom-4 md:rounded-b-3xl ${isOpen ? 'translate-y-0' : 'translate-y-full'
-                    } flex flex-col max-h-[90vh]`}
+                className={`fixed z-[100] bg-white transform transition-transform duration-300 ease-in-out flex flex-col
+                    inset-0
+                    md:inset-auto md:bottom-0 md:left-0 md:right-0 md:max-w-md md:mx-auto md:rounded-t-3xl md:max-h-[85vh]
+                    ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Property filters"
             >
-                {/* Header - Fixed */}
-                <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
+                {/* Header — always visible, safe-area aware */}
+                <div
+                    className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-white z-10 md:rounded-t-3xl"
+                    style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+                >
                     <h2 className="text-lg font-bold text-text-primary">Filters</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 rounded-full hover:bg-bg-card text-text-secondary hover:text-text-primary transition-colors"
+                        className="flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-text-secondary hover:text-text-primary transition-colors"
+                        aria-label="Close filters"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="p-5 overflow-y-auto flex-1 flex flex-col gap-8">
+                {/* Scrollable Content — takes remaining space between header and footer */}
+                <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 min-h-0">
                     <FilterContent filters={filters} onFilterChange={onFilterChange} />
                 </div>
 
-                {/* Footer - Fixed */}
-                <div className="p-5 border-t border-border shrink-0 bg-white md:rounded-b-3xl">
-                    <button
-                        onClick={onClose}
-                        className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3.5 rounded-xl transition-colors shadow-sm"
-                    >
-                        Apply Filters
-                    </button>
+                {/* Footer — always visible, safe-area aware */}
+                <div
+                    className="shrink-0 border-t border-border bg-white px-4 py-3"
+                    style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+                >
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleReset}
+                            className="flex-1 border border-border bg-white hover:bg-slate-50 text-text-secondary font-semibold py-3 rounded-xl transition-colors text-sm"
+                        >
+                            Reset All
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="flex-[2] bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl transition-colors shadow-sm text-sm"
+                        >
+                            Apply Filters
+                        </button>
+                    </div>
                 </div>
             </div>
         </>
     );
 }
+

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
     return (
         <RoleGuard allowedRoles={["agent"]}>
-            <div className="flex min-h-screen">
+            <div className="flex flex-col lg:flex-row min-h-screen">
                 <AgentDashboardSidebar />
                 <div className="flex-1 min-w-0 bg-bg flex flex-col">
                     <Container className="py-6 sm:py-8 lg:py-10 flex-1">

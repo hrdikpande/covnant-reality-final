@@ -371,10 +371,10 @@ export function SearchContent() {
 
 
     return (
-        <div className="min-h-screen bg-bg relative">
+        <div className="min-h-screen bg-bg relative pb-20 lg:pb-0">
             {/* Sticky Top Bar */}
-            <div className="sticky top-[56px] z-40 bg-white border-b border-border shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-14 md:h-16 lg:h-[72px] flex items-center justify-between">
+            <div className="sticky top-[64px] z-40 bg-white border-b border-border shadow-sm">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-12 sm:h-14 md:h-16 lg:h-[72px] flex items-center justify-between">
 
                     {/* Mobile/Tablet Header Left */}
                     <div className="flex items-center gap-3 lg:hidden">
@@ -430,7 +430,7 @@ export function SearchContent() {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
                 {/* Mobile/Tablet Search Results Heading */}
                 <div className="lg:hidden mb-4 md:mb-6">
                     <div className="flex items-center justify-between">
@@ -459,7 +459,7 @@ export function SearchContent() {
                 )}
 
                 {/* Active Filters / Badges */}
-                <div className="flex flex-wrap items-center gap-2 mb-6">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                     {filters.listing_type && (
                         <span className="px-3.5 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full capitalize border border-primary/20">
                             {filters.listing_type === 'sell' ? 'Buy' : 'Rent'}
