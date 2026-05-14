@@ -424,9 +424,6 @@ export function EditListingModal({
         if (!formData.price || Number(formData.price) <= 0) {
             errs.price = "Price must be a positive number";
         }
-        if (!formData.address || String(formData.address).trim().length === 0) {
-            errs.address = "Address is required";
-        }
         if (!formData.city || String(formData.city).trim().length === 0) {
             errs.city = "City is required";
         }
@@ -538,7 +535,7 @@ export function EditListingModal({
         {
             title: "Location",
             fields: [
-                { label: "Address", key: "address", type: "text", required: true, placeholder: "Full address" },
+                { label: "Address", key: "address", type: "text", placeholder: "Full address" },
                 { label: "Locality", key: "locality", type: "text", placeholder: "Search locality…", half: true },
                 { label: "City", key: "city", type: "text", required: true, placeholder: "e.g. Hyderabad", half: true },
                 { label: "State", key: "state", type: "select", options: ALLOWED_STATES.map((s) => ({ label: s, value: s })), half: true },
