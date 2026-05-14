@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Check, MapPin, Loader2 } from 'lucide-react';
 import type { SearchFilters } from '@/types';
-import { fetchSimilarLocations } from '@/lib/supabase/search';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -124,8 +122,8 @@ function FilterSection({
     );
 }
 
-// ── Checkbox item
-function CheckboxItem({
+// ── Subtype Tile (Enhanced UI)
+function SubtypeTile({
     label,
     checked,
     onChange,
@@ -135,27 +133,19 @@ function CheckboxItem({
     onChange: () => void;
 }) {
     return (
-        <label className="flex items-center gap-2.5 py-1.5 cursor-pointer group" onClick={onChange}>
-            <span
-                className={`w-4.5 h-4.5 rounded flex items-center justify-center border transition-all shrink-0 ${
-                    checked
-                        ? 'bg-primary border-primary text-white'
-                        : 'border-gray-300 bg-white group-hover:border-primary/50'
-                }`}
-                style={{ width: '18px', height: '18px' }}
-            >
-                {checked && <Check className="w-3 h-3" />}
-            </span>
-            <span
-                className={`text-sm transition-colors ${
-                    checked
-                        ? 'text-text-primary font-medium'
-                        : 'text-text-secondary group-hover:text-text-primary'
-                }`}
-            >
-                {label}
-            </span>
-        </label>
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                onChange();
+            }}
+            className={`flex items-center justify-center px-3 py-2.5 rounded-xl border text-[11px] sm:text-xs font-semibold transition-all text-center min-h-[44px] ${
+                checked
+                    ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary/20'
+                    : 'bg-white border-border text-text-secondary hover:border-primary/30 hover:bg-slate-50/50'
+            }`}
+        >
+            {label}
+        </button>
     );
 }
 
@@ -283,50 +273,6 @@ export function FilterContent({ filters, onFilterChange }: FilterContentProps) {
         [filters.subtypes, onFilterChange]
     );
 
-    // ── Similar locations state
-    const [similarLocations, setSimilarLocations] = useState<string[]>([]);
-    const [locationsLoading, setLocationsLoading] = useState(false);
-    const prevLocKey = useRef<string>('');
-
-    useEffect(() => {
-        const key = `${filters.listing_type}|${filters.property_type}|${filters.city}`;
-        if (key === prevLocKey.current) return;
-        prevLocKey.current = key;
-
-        let cancelled = false;
-        setLocationsLoading(true);
-        fetchSimilarLocations(filters)
-            .then((locs) => {
-                if (!cancelled) setSimilarLocations(locs);
-            })
-            .catch(() => {
-                if (!cancelled) setSimilarLocations([]);
-            })
-            .finally(() => {
-                if (!cancelled) setLocationsLoading(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [filters.listing_type, filters.property_type, filters.city, filters]);
-
-    const toggleExtraLocation = useCallback(
-        (city: string) => {
-            const current = [...(filters.extra_locations ?? [])];
-            const idx = current.findIndex(
-                (c) => c.toLowerCase() === city.toLowerCase()
-            );
-            if (idx >= 0) {
-                current.splice(idx, 1);
-            } else {
-                current.push(city);
-            }
-            onFilterChange({
-                extra_locations: current.length > 0 ? current : undefined,
-            });
-        },
-        [filters.extra_locations, onFilterChange]
-    );
 
     return (
         <div className="flex flex-col gap-6">
@@ -366,9 +312,9 @@ export function FilterContent({ filters, onFilterChange }: FilterContentProps) {
                                 : 'Property Subtype'
                         }
                     >
-                        <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                        <div className="grid grid-cols-2 gap-2">
                             {RESIDENTIAL_SUBTYPES.map((name) => (
-                                <CheckboxItem
+                                <SubtypeTile
                                     key={name}
                                     label={name}
                                     checked={isSubtypeSelected(name, subtypes)}
@@ -504,9 +450,9 @@ export function FilterContent({ filters, onFilterChange }: FilterContentProps) {
                                 : 'Property Subtype'
                         }
                     >
-                        <div className="flex flex-col gap-0.5 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                        <div className="grid grid-cols-2 gap-2">
                             {COMMERCIAL_SUBTYPES.map((name) => (
-                                <CheckboxItem
+                                <SubtypeTile
                                     key={name}
                                     label={name}
                                     checked={isSubtypeSelected(name, subtypes)}
@@ -589,64 +535,6 @@ export function FilterContent({ filters, onFilterChange }: FilterContentProps) {
                 </div>
             </section>
 
-            <hr className="border-t border-border" />
-
-            {/* ── Available In Other Locations ─────────────────────── */}
-            <FilterSection title="Available In Other Locations">
-                {locationsLoading ? (
-                    <div className="flex items-center gap-2 py-3 text-text-muted text-sm">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Loading locations…
-                    </div>
-                ) : similarLocations.length === 0 ? (
-                    <p className="text-xs text-text-muted py-2">
-                        No other locations found for current filters.
-                    </p>
-                ) : (
-                    <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
-                        {similarLocations.map((city) => {
-                            const isChecked = (
-                                filters.extra_locations ?? []
-                            ).some(
-                                (c) =>
-                                    c.toLowerCase() === city.toLowerCase()
-                            );
-                            return (
-                                <label
-                                    key={city}
-                                    className="flex items-center gap-2.5 py-1.5 cursor-pointer group"
-                                >
-                                    <span
-                                        className={`w-4.5 h-4.5 rounded flex items-center justify-center border transition-all shrink-0 ${
-                                            isChecked
-                                                ? 'bg-primary border-primary text-white'
-                                                : 'border-gray-300 bg-white group-hover:border-primary/50'
-                                        }`}
-                                        style={{
-                                            width: '18px',
-                                            height: '18px',
-                                        }}
-                                    >
-                                        {isChecked && (
-                                            <Check className="w-3 h-3" />
-                                        )}
-                                    </span>
-                                    <MapPin className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                                    <span
-                                        className={`text-sm transition-colors ${
-                                            isChecked
-                                                ? 'text-text-primary font-medium'
-                                                : 'text-text-secondary group-hover:text-text-primary'
-                                        }`}
-                                    >
-                                        {city}
-                                    </span>
-                                </label>
-                            );
-                        })}
-                    </div>
-                )}
-            </FilterSection>
         </div>
     );
 }
