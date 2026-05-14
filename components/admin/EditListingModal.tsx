@@ -1,9 +1,11 @@
 "use client";
 
-import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { X, Loader2, CheckCircle, AlertCircle, Search } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import type { AdminProperty } from "@/lib/supabase/admin";
+import type { Locality } from "@/lib/api/locations";
 import {
     fetchPropertyForAdminEdit,
     updateAdminProperty,
@@ -186,6 +188,130 @@ function FormInput({
             {error && (
                 <p className="text-xs text-red-500 font-medium mt-1">{error}</p>
             )}
+        </div>
+    );
+}
+
+/* ── Searchable Locality Input ────────────────────────────────── */
+
+function LocalitySearchInput({
+    value,
+    cityName,
+    onChange,
+    onSelectLocality,
+    error,
+}: {
+    value: string;
+    cityName: string;
+    onChange: (val: string) => void;
+    onSelectLocality: (loc: Locality) => void;
+    error?: string;
+}) {
+    const [query, setQuery] = useState(value);
+    const [results, setResults] = useState<Locality[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const [searching, setSearching] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+    // Sync external value changes
+    useEffect(() => {
+        setQuery(value);
+    }, [value]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSearch = useCallback(async (searchQuery: string) => {
+        if (searchQuery.trim().length < 2) {
+            setResults([]);
+            return;
+        }
+
+        setSearching(true);
+        const supabase = createClient();
+
+        // Search localities by name or pincode, filtered by city name if available
+        let query = supabase
+            .from("localities")
+            .select("id, city_id, name, pincode, latitude, longitude")
+            .or(`name.ilike.%${searchQuery}%,pincode.ilike.%${searchQuery}%`)
+            .limit(10);
+
+        const { data } = await query;
+        setResults((data as Locality[]) ?? []);
+        setSearching(false);
+    }, []);
+
+    const handleInputChange = (val: string) => {
+        setQuery(val);
+        onChange(val);
+        setIsOpen(true);
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => handleSearch(val), 300);
+    };
+
+    const handleSelect = (loc: Locality) => {
+        setQuery(loc.name);
+        onChange(loc.name);
+        onSelectLocality(loc);
+        setIsOpen(false);
+    };
+
+    const baseInputClass = cn(
+        "w-full px-3.5 py-2.5 border rounded-xl text-sm text-text-primary",
+        "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
+        "transition-all duration-200 bg-white",
+        error
+            ? "border-red-300 focus:ring-red-200 focus:border-red-400"
+            : "border-border hover:border-slate-300"
+    );
+
+    return (
+        <div className="col-span-1 space-y-1.5" ref={wrapperRef}>
+            <label className="text-sm font-semibold text-text-secondary flex items-center gap-1">
+                Locality
+                <Search className="w-3 h-3 text-text-muted" />
+            </label>
+            <div className="relative">
+                <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onFocus={() => { if (query.length >= 2) setIsOpen(true); }}
+                    placeholder="Search locality or pincode…"
+                    className={baseInputClass}
+                />
+                {searching && (
+                    <Loader2 className="w-4 h-4 animate-spin text-primary absolute right-3 top-1/2 -translate-y-1/2" />
+                )}
+
+                {isOpen && results.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {results.map((loc) => (
+                            <button
+                                key={loc.id}
+                                type="button"
+                                onClick={() => handleSelect(loc)}
+                                className="w-full text-left px-4 py-2.5 hover:bg-primary/5 transition-colors flex justify-between items-center text-sm border-b border-slate-50 last:border-0"
+                            >
+                                <span className="font-medium text-text-primary">{loc.name}</span>
+                                <span className="text-xs text-text-muted font-mono">{loc.pincode}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+            {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
         </div>
     );
 }
@@ -413,7 +539,7 @@ export function EditListingModal({
             title: "Location",
             fields: [
                 { label: "Address", key: "address", type: "text", required: true, placeholder: "Full address" },
-                { label: "Locality", key: "locality", type: "text", placeholder: "e.g. Gachibowli", half: true },
+                { label: "Locality", key: "locality", type: "text", placeholder: "Search locality…", half: true },
                 { label: "City", key: "city", type: "text", required: true, placeholder: "e.g. Hyderabad", half: true },
                 { label: "State", key: "state", type: "select", options: ALLOWED_STATES.map((s) => ({ label: s, value: s })), half: true },
                 { label: "Pincode", key: "pincode", type: "text", placeholder: "e.g. 500032", half: true },
@@ -472,15 +598,33 @@ export function EditListingModal({
                                             {section.title}
                                         </h3>
                                         <div className="grid grid-cols-2 gap-4">
-                                            {section.fields.map((field) => (
-                                                <FormInput
-                                                    key={field.key}
-                                                    field={field}
-                                                    value={formData[field.key] ?? ""}
-                                                    onChange={(val) => handleFieldChange(field.key, val)}
-                                                    error={errors[field.key]}
-                                                />
-                                            ))}
+                                            {section.fields.map((field) => {
+                                                // Render searchable locality input instead of plain text
+                                                if (field.key === "locality") {
+                                                    return (
+                                                        <LocalitySearchInput
+                                                            key={field.key}
+                                                            value={String(formData.locality ?? "")}
+                                                            cityName={String(formData.city ?? "")}
+                                                            onChange={(val) => handleFieldChange("locality", val)}
+                                                            onSelectLocality={(loc) => {
+                                                                handleFieldChange("locality", loc.name);
+                                                                handleFieldChange("pincode", loc.pincode);
+                                                            }}
+                                                            error={errors.locality}
+                                                        />
+                                                    );
+                                                }
+                                                return (
+                                                    <FormInput
+                                                        key={field.key}
+                                                        field={field}
+                                                        value={formData[field.key] ?? ""}
+                                                        onChange={(val) => handleFieldChange(field.key, val)}
+                                                        error={errors[field.key]}
+                                                    />
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 ))}

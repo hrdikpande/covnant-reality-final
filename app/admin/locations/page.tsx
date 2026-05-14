@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { State, City, Locality, getStates, getCitiesByState, getLocalitiesByCity, clearLocationsCache } from "@/lib/api/locations";
-import { Trash2, Plus, AlertCircle, Loader2, Search } from "lucide-react";
+import { Trash2, Plus, AlertCircle, Loader2, Search, Edit2, X } from "lucide-react";
 
 export default function AdminLocationsPage() {
     const supabase = createClient();
@@ -23,6 +23,7 @@ export default function AdminLocationsPage() {
     const [newCityName, setNewCityName] = useState("");
     const [newLocalityName, setNewLocalityName] = useState("");
     const [newLocalityPincode, setNewLocalityPincode] = useState("");
+    const [editingLocality, setEditingLocality] = useState<Locality | null>(null);
 
     useEffect(() => {
         loadStates();
@@ -38,7 +39,25 @@ export default function AdminLocationsPage() {
         if (selectedCity) loadLocalities(selectedCity);
         else setLocalities([]);
         setLocalitySearch("");
+        setEditingLocality(null);
+        setNewLocalityName("");
+        setNewLocalityPincode("");
     }, [selectedCity]);
+
+    // Smart detection: switch to edit mode if pincode already exists
+    useEffect(() => {
+        const trimmedPincode = newLocalityPincode.trim();
+        if (trimmedPincode.length >= 4) {
+            const existingLoc = localities.find(l => l.pincode === trimmedPincode);
+            if (existingLoc && (!editingLocality || editingLocality.id !== existingLoc.id)) {
+                setEditingLocality(existingLoc);
+                // Only overwrite the name if they haven't typed one yet
+                if (!newLocalityName.trim()) {
+                    setNewLocalityName(existingLoc.name);
+                }
+            }
+        }
+    }, [newLocalityPincode, localities, editingLocality, newLocalityName]);
 
     const loadStates = async () => {
         setLoading(true);
@@ -110,28 +129,67 @@ export default function AdminLocationsPage() {
         }
     };
 
-    const handleAddLocality = async (e: React.FormEvent) => {
+    const handleEditLocality = (loc: Locality) => {
+        setEditingLocality(loc);
+        setNewLocalityName(loc.name);
+        setNewLocalityPincode(loc.pincode);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingLocality(null);
+        setNewLocalityName("");
+        setNewLocalityPincode("");
+    };
+
+    const handleSaveLocality = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newLocalityName.trim() || !newLocalityPincode.trim() || !selectedCity) return;
 
         try {
-            const { error: dbError } = await supabase
-                .from("localities")
-                .insert({
-                    city_id: selectedCity,
-                    name: newLocalityName.trim(),
-                    pincode: newLocalityPincode.trim()
-                });
+            if (editingLocality) {
+                // Update the locality — the DB trigger will automatically sync properties
+                const { error: dbError } = await supabase
+                    .from("localities")
+                    .update({
+                        name: newLocalityName.trim(),
+                        pincode: newLocalityPincode.trim()
+                    })
+                    .eq("id", editingLocality.id);
 
-            if (dbError) throw dbError;
+                if (dbError) throw dbError;
+
+                // Check how many properties were synced
+                const { count } = await supabase
+                    .from("properties")
+                    .select("id", { count: "exact", head: true })
+                    .eq("locality_id", editingLocality.id);
+
+                const syncedCount = count ?? 0;
+                if (syncedCount > 0) {
+                    alert(`✅ Locality updated! ${syncedCount} linked propert${syncedCount === 1 ? 'y was' : 'ies were'} automatically synced.`);
+                }
+
+                setEditingLocality(null);
+            } else {
+                // Insert
+                const { error: dbError } = await supabase
+                    .from("localities")
+                    .insert({
+                        city_id: selectedCity,
+                        name: newLocalityName.trim(),
+                        pincode: newLocalityPincode.trim()
+                    });
+
+                if (dbError) throw dbError;
+            }
 
             setNewLocalityName("");
             setNewLocalityPincode("");
             clearLocationsCache('localities', selectedCity);
             loadLocalities(selectedCity);
         } catch (err: any) {
-            console.error("Add locality error:", err);
-            const message = err?.message || "Failed to add locality";
+            console.error("Save locality error:", err);
+            let message = err?.message || "Failed to save locality";
             alert(`Error: ${message}`);
         }
     };
@@ -145,7 +203,10 @@ export default function AdminLocationsPage() {
             loadLocalities(selectedCity);
         } catch (err: any) {
             console.error("Delete locality error:", err);
-            const message = err?.message || "Failed to delete locality";
+            let message = err?.message || "Failed to delete locality";
+            if (err?.code === '23503') {
+                message = "Cannot delete this locality because it is currently linked to one or more properties. Please reassign or delete those properties first.";
+            }
             alert(`Error: ${message}`);
         }
     };
@@ -250,7 +311,15 @@ export default function AdminLocationsPage() {
                         <p className="text-text-muted text-sm text-center py-8">Select a city first</p>
                     ) : (
                         <>
-                            <form onSubmit={handleAddLocality} className="flex flex-col gap-2 mb-4">
+                            <form onSubmit={handleSaveLocality} className={`flex flex-col gap-2 mb-4 p-3 rounded-xl border transition-colors ${editingLocality ? 'bg-primary/5 border-primary/20' : 'border-transparent'}`}>
+                                {editingLocality && (
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs font-semibold text-primary">Edit Locality</span>
+                                        <button type="button" onClick={handleCancelEdit} className="text-xs text-slate-500 hover:text-slate-800 flex items-center">
+                                            <X className="w-3 h-3 mr-0.5" /> Cancel
+                                        </button>
+                                    </div>
+                                )}
                                 <input
                                     type="text"
                                     placeholder="Locality Name"
@@ -266,8 +335,8 @@ export default function AdminLocationsPage() {
                                         onChange={e => setNewLocalityPincode(e.target.value)}
                                         className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary w-full"
                                     />
-                                    <button type="submit" disabled={!newLocalityName.trim() || !newLocalityPincode.trim()} className="p-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 text-sm font-medium">
-                                        Add
+                                    <button type="submit" disabled={!newLocalityName.trim() || !newLocalityPincode.trim()} className="p-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 text-sm font-medium transition-colors">
+                                        {editingLocality ? "Save" : "Add"}
                                     </button>
                                 </div>
                             </form>
@@ -298,9 +367,14 @@ export default function AdminLocationsPage() {
                                                         <p className="text-sm font-medium text-text-primary truncate">{loc.name}</p>
                                                         <p className="text-xs text-text-muted font-mono">{loc.pincode}</p>
                                                     </div>
-                                                    <button onClick={() => handleDeleteLocality(loc.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                                    <div className="flex gap-1 flex-shrink-0">
+                                                        <button onClick={() => handleEditLocality(loc)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteLocality(loc.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         .eq("id", userId)
                         .maybeSingle(),
                     new Promise<{ data: null; error: { message: string } }>((resolve) =>
-                        setTimeout(() => resolve({ data: null, error: { message: "Profile fetch timed out after 10s" } }), 10000)
+                        setTimeout(() => resolve({ data: null, error: { message: "Profile fetch timed out after 5s" } }), 5000)
                     ),
                 ]);
 
@@ -214,17 +214,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Always fetch profile from DB — it is the authoritative source for role.
         // This handles the case where user_metadata was never set or is stale.
         if (data.user) {
-            const { data: profileData } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", data.user.id)
-                .maybeSingle();
-            if (profileData) {
-                setProfile(profileData as Profile);
-                // Profile role always wins (handles admins promoted via DB only)
-                if ((profileData as Profile).role) {
-                    role = (profileData as Profile).role;
+            try {
+                const result = await Promise.race([
+                    supabase
+                        .from("profiles")
+                        .select("*")
+                        .eq("id", data.user.id)
+                        .maybeSingle(),
+                    new Promise<{ data: null; error: { message: string } }>((resolve) =>
+                        setTimeout(() => resolve({ data: null, error: { message: "Profile fetch timed out during login" } }), 5000)
+                    ),
+                ]);
+                const { data: profileData, error: profileError } = result;
+                
+                if (!profileError && profileData) {
+                    setProfile(profileData as Profile);
+                    // Profile role always wins (handles admins promoted via DB only)
+                    if ((profileData as Profile).role) {
+                        role = (profileData as Profile).role;
+                    }
+                } else if (profileError) {
+                    console.warn("[Auth] Profile fetch failed or timed out during login:", profileError.message);
                 }
+            } catch (err) {
+                console.error("[Auth] Exception fetching profile during login:", err);
             }
         }
 
