@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, SlidersHorizontal, ArrowUpDown, SearchX, AlertTriangle, Bookmark, ChevronLeft, ChevronRight, RefreshCw, Info } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, ArrowUpDown, SearchX, AlertTriangle, Bookmark, ChevronLeft, ChevronRight, RefreshCw, Info, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePropertySearch } from '@/hooks/usePropertySearch';
@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { formatPropertyTitle } from '@/lib/utils';
 import { isCorruptedLocation } from '@/lib/locationUtils';
+import { useLocation } from '@/components/LocationContext';
 import type { SearchProperty, SearchFilters } from '@/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -347,6 +348,7 @@ function SaveSearchButton({ filters }: { filters: SearchFilters }) {
 
 export function SearchContent() {
     const searchParams = useSearchParams();
+    const { selectedLocation, setLocation } = useLocation();
     const {
         results,
         totalCount,
@@ -362,13 +364,44 @@ export function SearchContent() {
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+    // Sync LocationContext → search filters when user picks a new location
+    const prevLocationRef = useRef<{ cityId?: string; localityId?: string; stateId?: string }>({
+        cityId: undefined,
+        localityId: undefined,
+        stateId: undefined,
+    });
+    useEffect(() => {
+        const newCityId = selectedLocation.city?.id;
+        const newLocalityId = selectedLocation.locality?.id;
+        const newStateId = selectedLocation.state?.id;
+        const prev = prevLocationRef.current;
+
+        const changed =
+            prev.cityId !== newCityId ||
+            prev.localityId !== newLocalityId ||
+            prev.stateId !== newStateId;
+
+        if (changed) {
+            prevLocationRef.current = { cityId: newCityId, localityId: newLocalityId, stateId: newStateId };
+            if (newCityId || newStateId) {
+                updateFilter({
+                    city: selectedLocation.city?.name?.toLowerCase() || undefined,
+                    cityId: newCityId || undefined,
+                    stateId: newStateId || undefined,
+                    localityId: newLocalityId || undefined,
+                });
+            }
+        }
+    }, [selectedLocation, updateFilter]);
+
     const noLocation = searchParams.get('noLocation') === 'true' && !filters.city;
 
-    const displayLocation = filters.city
+    // Show locality name when a specific locality is selected, otherwise city
+    const localityName = selectedLocation.locality?.name;
+    const cityName = filters.city
         ? filters.city.charAt(0).toUpperCase() + filters.city.slice(1)
-        : 'All Locations';
-
-
+        : null;
+    const displayLocation = localityName || cityName || 'All Locations';
 
     return (
         <div className="min-h-screen bg-bg relative pb-20 lg:pb-0">
@@ -461,54 +494,102 @@ export function SearchContent() {
                 {/* Active Filters / Badges */}
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                     {filters.listing_type && (
-                        <span className="px-3.5 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full capitalize border border-primary/20">
+                        <button
+                            onClick={() => updateFilter({ listing_type: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full capitalize border border-primary/20 hover:bg-primary/20 transition-colors"
+                        >
                             {filters.listing_type === 'sell' ? 'Buy' : 'Rent'}
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
-                    {filters.city && (
-                        <span className="px-3.5 py-1.5 bg-white text-text-secondary text-sm font-medium rounded-full capitalize border border-border shadow-sm">
-                            {filters.city}
-                        </span>
+                    {(filters.city || localityName) && (
+                        <button
+                            onClick={() => { setLocation({}); updateFilter({ city: undefined, cityId: undefined, stateId: undefined, localityId: undefined }); }}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-text-secondary text-sm font-medium rounded-full capitalize border border-border shadow-sm hover:bg-slate-50 transition-colors"
+                        >
+                            {localityName ? `${localityName}, ${cityName || ''}` : cityName}
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                     {filters.subtypes && filters.subtypes.length > 0 && filters.subtypes.map((sub) => (
-                        <span key={sub} className="px-3.5 py-1.5 bg-purple-50 text-purple-700 text-sm font-medium rounded-full border border-purple-200 shadow-sm capitalize">
+                        <button
+                            key={sub}
+                            onClick={() => {
+                                const next = filters.subtypes!.filter(s => s !== sub);
+                                updateFilter({ subtypes: next.length > 0 ? next : undefined });
+                            }}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-50 text-purple-700 text-sm font-medium rounded-full border border-purple-200 shadow-sm capitalize hover:bg-purple-100 transition-colors"
+                        >
                             {sub.replace(/-/g, ' ')}
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     ))}
                     {filters.bedrooms != null && (
-                        <span className="px-3.5 py-1.5 bg-white text-text-secondary text-sm font-medium rounded-full border border-border shadow-sm">
+                        <button
+                            onClick={() => updateFilter({ bedrooms: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-text-secondary text-sm font-medium rounded-full border border-border shadow-sm hover:bg-slate-50 transition-colors"
+                        >
                             {filters.bedrooms}+ BHK
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                     {(filters.price_min || filters.price_max) && (
-                        <span className="px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-medium rounded-full border border-amber-200 shadow-sm">
+                        <button
+                            onClick={() => updateFilter({ price_min: undefined, price_max: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-medium rounded-full border border-amber-200 shadow-sm hover:bg-amber-100 transition-colors"
+                        >
                             ₹{filters.price_min ? filters.price_min.toLocaleString('en-IN') : '0'} – ₹{filters.price_max ? filters.price_max.toLocaleString('en-IN') : '∞'}
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                     {(filters.area_min || filters.area_max) && (
-                        <span className="px-3.5 py-1.5 bg-cyan-50 text-cyan-700 text-sm font-medium rounded-full border border-cyan-200 shadow-sm">
+                        <button
+                            onClick={() => updateFilter({ area_min: undefined, area_max: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-cyan-50 text-cyan-700 text-sm font-medium rounded-full border border-cyan-200 shadow-sm hover:bg-cyan-100 transition-colors"
+                        >
                             {filters.area_min ?? '0'} – {filters.area_max ?? '∞'} sq.ft
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                     {filters.furnishing && (
-                        <span className="px-3.5 py-1.5 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-full border border-indigo-200 shadow-sm capitalize">
+                        <button
+                            onClick={() => updateFilter({ furnishing: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-full border border-indigo-200 shadow-sm capitalize hover:bg-indigo-100 transition-colors"
+                        >
                             {filters.furnishing.replace(/_/g, ' ')}
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                     {filters.possession && (
-                        <span className="px-3.5 py-1.5 bg-teal-50 text-teal-700 text-sm font-medium rounded-full border border-teal-200 shadow-sm capitalize">
+                        <button
+                            onClick={() => updateFilter({ possession: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-50 text-teal-700 text-sm font-medium rounded-full border border-teal-200 shadow-sm capitalize hover:bg-teal-100 transition-colors"
+                        >
                             {filters.possession.replace(/_/g, ' ')}
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                     {filters.extra_locations && filters.extra_locations.length > 0 && filters.extra_locations.map((loc) => (
-                        <span key={loc} className="px-3.5 py-1.5 bg-orange-50 text-orange-700 text-sm font-medium rounded-full border border-orange-200 shadow-sm capitalize">
+                        <button
+                            key={loc}
+                            onClick={() => {
+                                const next = filters.extra_locations!.filter(l => l !== loc);
+                                updateFilter({ extra_locations: next.length > 0 ? next : undefined });
+                            }}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-50 text-orange-700 text-sm font-medium rounded-full border border-orange-200 shadow-sm capitalize hover:bg-orange-100 transition-colors"
+                        >
                             + {loc}
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     ))}
                     {filters.is_verified && (
-                        <span className="px-3.5 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-full border border-green-200 shadow-sm">
+                        <button
+                            onClick={() => updateFilter({ is_verified: undefined })}
+                            className="group flex items-center gap-1.5 px-3.5 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-full border border-green-200 shadow-sm hover:bg-green-100 transition-colors"
+                        >
                             Verified Only
-                        </span>
+                            <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     )}
                 </div>
 

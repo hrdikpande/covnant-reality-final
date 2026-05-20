@@ -66,11 +66,12 @@ async function runRpcSearch(
               ? filters.subtypes![0]
               : null;
 
+
     const { data, error } = await supabase.rpc("search_properties", {
         p_city: locationRoot,
-        p_city_id: null,
-        p_state_id: null,
-        p_locality_id: null,
+        p_city_id: filters.cityId ?? null,
+        p_state_id: filters.stateId ?? null,
+        p_locality_id: filters.localityId ?? null,
         p_bedrooms: filters.bedrooms ?? null,
         p_listing_type: filters.listing_type ?? null,
         p_property_type: filters.property_type ?? null,

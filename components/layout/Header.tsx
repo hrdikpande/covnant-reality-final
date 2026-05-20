@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, User, Menu, X } from "lucide-react";
+import { MapPin, User, Menu, X, LogOut, LayoutDashboard, UserPlus } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export function Header() {
     const { selectedLocation, setLocation, isLocationSelectorOpen, openLocationSelector, closeLocationSelector } = useLocation();
-    const { userRole } = useAuth();
+    const { userRole, signOut } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const getDashboardPath = (role: UserRole) => {
@@ -29,6 +29,11 @@ export function Header() {
         { href: "/search?category=commercial", label: "Commercial" },
         { href: "/blog", label: "Blog" },
     ];
+
+    const handleMobileSignOut = async () => {
+        setIsMobileMenuOpen(false);
+        await signOut();
+    };
 
     return (
         <>
@@ -161,6 +166,47 @@ export function Header() {
                                     </Link>
                                 ))}
                             </div>
+
+                            {/* Auth Actions — visible only on mobile */}
+                            {userRole ? (
+                                <div className="mt-4 pt-4 border-t border-slate-100 space-y-1">
+                                    <Link
+                                        href={getDashboardPath(userRole)}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-4 text-lg font-semibold text-slate-700 hover:text-primary hover:bg-slate-50 rounded-xl transition-all"
+                                    >
+                                        <LayoutDashboard className="h-5 w-5 shrink-0" />
+                                        Dashboard
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={handleMobileSignOut}
+                                        className="flex items-center gap-3 w-full px-4 py-4 text-lg font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-all text-left"
+                                    >
+                                        <LogOut className="h-5 w-5 shrink-0" />
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="mt-4 pt-4 border-t border-slate-100 space-y-1">
+                                    <Link
+                                        href="/login"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-4 text-lg font-semibold text-slate-700 hover:text-primary hover:bg-slate-50 rounded-xl transition-all"
+                                    >
+                                        <User className="h-5 w-5 shrink-0" />
+                                        Login
+                                    </Link>
+                                    <Link
+                                        href="/signup"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-4 text-lg font-semibold text-slate-700 hover:text-primary hover:bg-slate-50 rounded-xl transition-all"
+                                    >
+                                        <UserPlus className="h-5 w-5 shrink-0" />
+                                        Sign Up
+                                    </Link>
+                                </div>
+                            )}
                         </nav>
                         <div className="p-4 border-t border-slate-100">
                             <p className="text-center text-sm text-slate-500 mb-4">

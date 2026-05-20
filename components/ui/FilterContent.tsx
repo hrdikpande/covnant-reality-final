@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { MapPin, ChevronRight, X as XIcon } from 'lucide-react';
+import { useLocation } from '@/components/LocationContext';
 import type { SearchFilters } from '@/types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -256,6 +258,32 @@ function RangeInputs({
 export function FilterContent({ filters, onFilterChange }: FilterContentProps) {
     const subtypes = filters.subtypes ?? [];
     const { showResidential, showCommercial } = detectContext(filters);
+    const { selectedLocation, setLocation, openLocationSelector } = useLocation();
+
+    // Build display string for the current location
+    const locationParts: string[] = [];
+    if (selectedLocation.locality?.name) locationParts.push(selectedLocation.locality.name);
+    if (selectedLocation.city?.name) locationParts.push(selectedLocation.city.name);
+    if (selectedLocation.state?.name && !selectedLocation.city?.name) locationParts.push(selectedLocation.state.name);
+    const locationDisplay = locationParts.length > 0 ? locationParts.join(', ') : null;
+
+    // Also derive from the search filter's city (URL params may set it without the context)
+    const filterCity = filters.city
+        ? filters.city.charAt(0).toUpperCase() + filters.city.slice(1)
+        : null;
+
+    const displayedLocation = locationDisplay || filterCity;
+
+    const handleClearLocation = () => {
+        // Clear both the search filters AND the global location context
+        setLocation({});
+        onFilterChange({
+            city: undefined,
+            cityId: undefined,
+            stateId: undefined,
+            localityId: undefined,
+        });
+    };
 
     // Toggle a subtype in/out of the subtypes array
     const toggleSubtype = useCallback(
@@ -276,6 +304,45 @@ export function FilterContent({ filters, onFilterChange }: FilterContentProps) {
 
     return (
         <div className="flex flex-col gap-6">
+            {/* ── Location ──────────────────────────────────────── */}
+            <FilterSection title="Location">
+                <button
+                    type="button"
+                    onClick={openLocationSelector}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-white hover:border-primary/40 hover:bg-slate-50/50 transition-all group text-left min-h-[52px]"
+                >
+                    <MapPin className="w-5 h-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        {displayedLocation ? (
+                            <>
+                                <p className="text-sm font-semibold text-text-primary truncate">
+                                    {displayedLocation}
+                                </p>
+                                <p className="text-[11px] text-text-muted mt-0.5">Tap to change location</p>
+                            </>
+                        ) : (
+                            <p className="text-sm text-text-secondary">Select a location…</p>
+                        )}
+                    </div>
+                    {displayedLocation ? (
+                        <span
+                            role="button"
+                            aria-label="Clear location"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleClearLocation();
+                            }}
+                            className="p-1 rounded-full hover:bg-red-50 text-text-muted hover:text-red-500 transition-colors"
+                        >
+                            <XIcon className="w-4 h-4" />
+                        </span>
+                    ) : (
+                        <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors shrink-0" />
+                    )}
+                </button>
+            </FilterSection>
+
+            <hr className="border-t border-border" />
             {/* ── Listing Type ─────────────────────────────────────── */}
             <FilterSection title="Listing Type">
                 <div className="flex flex-wrap gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, Search, ChevronLeft, X, Loader2 } from "lucide-react";
+import { MapPin, Search, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStates, getCitiesByState, getLocalitiesByCity, State, City, Locality } from "@/lib/api/locations";
 import { SelectedLocation } from "@/components/LocationContext";
@@ -83,25 +83,46 @@ export function LocationSelector({
         }
     }, [isOpen, selectedLocation]);
 
-    const handleSelectState = async (state: State) => {
+    // ── Highlight handlers (tile tap = highlight only, no navigation) ────────
+    const handleHighlightState = (state: State) => {
         setTempState(state);
         setTempCity(undefined);
+    };
+
+    const handleHighlightCity = (city: City) => {
+        setTempCity(city);
+    };
+
+    // ── Continue / drill-down handlers ─────────────────────────────────────
+    const handleContinueToCity = async () => {
+        if (!tempState) return;
         setIsLoading(true);
-        const stateCities = await getCitiesByState(state.id);
+        const stateCities = await getCitiesByState(tempState.id);
         setCities(stateCities);
         setIsLoading(false);
         setStep("CITY");
     };
 
-    const handleSelectCity = async (city: City) => {
-        setTempCity(city);
+    const handleContinueToLocality = async () => {
+        if (!tempCity) return;
         setIsLoading(true);
-        const cityLocalities = await getLocalitiesByCity(city.id);
+        const cityLocalities = await getLocalitiesByCity(tempCity.id);
         setLocalities(cityLocalities);
         setIsLoading(false);
         setStep("LOCALITY");
     };
 
+    // ── Apply handler (confirm at current level) ──────────────────────────
+    const handleApply = () => {
+        if (step === "STATE" && tempState) {
+            onSelect({ state: tempState });
+        } else if (step === "CITY" && tempState && tempCity) {
+            onSelect({ state: tempState, city: tempCity });
+        }
+        // LOCALITY step uses direct tile click (handleSelectLocality)
+    };
+
+    // ── Locality tile click (unchanged — tap = apply) ─────────────────────
     const handleSelectLocality = (locality: Locality) => {
         if (tempState && tempCity) {
             onSelect({
@@ -116,6 +137,11 @@ export function LocationSelector({
         if (step === "CITY") setStep("STATE");
         if (step === "LOCALITY") setStep("CITY");
     };
+
+    // Whether the sticky action bar should be visible
+    const showActionBar =
+        (step === "STATE" && !!tempState) ||
+        (step === "CITY" && !!tempCity);
 
     let listData: { id: string; name: string; subtitle?: string; original: State | City | Locality }[] = [];
     if (step === "STATE") {
@@ -255,8 +281,8 @@ export function LocationSelector({
                                         key={item.id}
                                         type="button"
                                         onClick={() => {
-                                            if (step === "STATE") handleSelectState(item.original as State);
-                                            else if (step === "CITY") handleSelectCity(item.original as City);
+                                            if (step === "STATE") handleHighlightState(item.original as State);
+                                            else if (step === "CITY") handleHighlightCity(item.original as City);
                                             else handleSelectLocality(item.original as Locality);
                                         }}
                                         className={cn(
@@ -289,6 +315,34 @@ export function LocationSelector({
                         </div>
                     )}
                 </div>
+
+                {/* ── Sticky Action Bar (Apply + Continue) ─────────────── */}
+                {showActionBar && (
+                    <div className="sticky bottom-0 px-5 py-3 bg-white border-t border-slate-100 safe-area-bottom flex items-center gap-2.5">
+                        <button
+                            type="button"
+                            onClick={handleApply}
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all",
+                                "bg-primary text-white hover:bg-primary/90 active:scale-[0.98] shadow-sm"
+                            )}
+                        >
+                            <Check className="h-4 w-4" />
+                            Apply{step === "STATE" ? ` ${tempState?.name || ""}` : ` ${tempCity?.name || ""}`}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={step === "STATE" ? handleContinueToCity : handleContinueToLocality}
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl text-sm font-semibold transition-all",
+                                "bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-[0.98]"
+                            )}
+                        >
+                            {step === "STATE" ? "Select City" : "Select Locality"}
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

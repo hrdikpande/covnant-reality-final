@@ -212,7 +212,7 @@ function LocalitySearchInput({
     const [isOpen, setIsOpen] = useState(false);
     const [searching, setSearching] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+    const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     // Sync external value changes
     useEffect(() => {

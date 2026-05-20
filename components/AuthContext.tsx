@@ -7,6 +7,7 @@ import {
     useEffect,
     useCallback,
     useMemo,
+    useRef,
     ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -97,28 +98,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [authError, setAuthError] = useState<string | null>(null);
     const router = useRouter();
 
-
     const supabase = useMemo(() => createClient(), []);
+
+    /* ── Refs for cleanup ──────────────────────────────────── */
+    const isMountedRef = useRef(true);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     /* ── Fetch profile from DB ──────────────────────────────── */
     const fetchProfile = useCallback(
         async (userId: string) => {
             console.log("[Auth] fetchProfile: starting query for", userId);
 
-            try {
-                // Race the query against a 10s timeout
-                const result = await Promise.race([
-                    supabase
-                        .from("profiles")
-                        .select("*")
-                        .eq("id", userId)
-                        .maybeSingle(),
-                    new Promise<{ data: null; error: { message: string } }>((resolve) =>
-                        setTimeout(() => resolve({ data: null, error: { message: "Profile fetch timed out after 5s" } }), 5000)
-                    ),
-                ]);
+            // Cancel any previous in-flight profile fetch
+            abortControllerRef.current?.abort();
+            const controller = new AbortController();
+            abortControllerRef.current = controller;
 
-                const { data, error } = result;
+            try {
+                // Use AbortController with a 5s timeout so the Supabase query
+                // is genuinely cancelled when the timeout fires (no orphaned fetch).
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("*")
+                    .eq("id", userId)
+                    .abortSignal(controller.signal)
+                    .maybeSingle();
+
+                clearTimeout(timeoutId);
+
+                // Guard: component unmounted or request was superseded
+                if (controller.signal.aborted || !isMountedRef.current) return;
 
                 if (error) {
                     console.error("[Auth] fetchProfile: error -", error.message);
@@ -128,23 +139,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                 console.log("[Auth] fetchProfile: success, role =", data?.role);
                 setProfile(data as Profile);
-            } catch (err) {
+            } catch (err: unknown) {
+                // Guard: don't update state on unmounted component
+                if (!isMountedRef.current) return;
+
+                // AbortError is expected when the timeout fires or component unmounts
+                if (err instanceof DOMException && err.name === "AbortError") {
+                    console.warn("[Auth] fetchProfile: aborted (timeout or unmount)");
+                    setProfile(null);
+                    return;
+                }
+
                 console.error("[Auth] fetchProfile: exception -", err);
                 setProfile(null);
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
+        [supabase]
     );
 
     /* ── Session hydration + listener ───────────────────────── */
     useEffect(() => {
-        // 1. Get initial session
+        isMountedRef.current = true;
+
+        // 1. Get initial session (page refresh — no SIGNED_IN event fires)
         const hydrateSession = async () => {
             try {
                 const {
                     data: { session: initialSession },
                 } = await supabase.auth.getSession();
+
+                if (!isMountedRef.current) return;
 
                 setSession(initialSession);
                 setUser(initialSession?.user ?? null);
@@ -155,7 +179,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch (err) {
                 console.error("Session hydration error:", err);
             } finally {
-                setIsLoading(false);
+                if (isMountedRef.current) {
+                    setIsLoading(false);
+                }
             }
         };
 
@@ -166,6 +192,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event: string, newSession: Session | null) => {
             console.log("[Auth] onAuthStateChange:", event, newSession?.user?.id);
+
+            if (!isMountedRef.current) return;
+
             setSession(newSession);
             setUser(newSession?.user ?? null);
 
@@ -180,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             if (event === "TOKEN_REFRESHED") {
-                // Session refreshed automatically — nothing extra needed
+                // Session refreshed automatically
             }
 
             if (event === "PASSWORD_RECOVERY") {
@@ -190,10 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         return () => {
+            isMountedRef.current = false;
+            // Cancel any in-flight profile fetch
+            abortControllerRef.current?.abort();
             subscription.unsubscribe();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [fetchProfile, supabase, router]);
 
     /* ── Auth Actions ───────────────────────────────────────── */
 
@@ -208,38 +239,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { error, role: null as UserRole };
         }
 
-        // Default role from JWT metadata
-        let role: UserRole = (data.user?.user_metadata?.role as UserRole) ?? null;
-
-        // Always fetch profile from DB — it is the authoritative source for role.
-        // This handles the case where user_metadata was never set or is stale.
-        if (data.user) {
-            try {
-                const result = await Promise.race([
-                    supabase
-                        .from("profiles")
-                        .select("*")
-                        .eq("id", data.user.id)
-                        .maybeSingle(),
-                    new Promise<{ data: null; error: { message: string } }>((resolve) =>
-                        setTimeout(() => resolve({ data: null, error: { message: "Profile fetch timed out during login" } }), 5000)
-                    ),
-                ]);
-                const { data: profileData, error: profileError } = result;
-                
-                if (!profileError && profileData) {
-                    setProfile(profileData as Profile);
-                    // Profile role always wins (handles admins promoted via DB only)
-                    if ((profileData as Profile).role) {
-                        role = (profileData as Profile).role;
-                    }
-                } else if (profileError) {
-                    console.warn("[Auth] Profile fetch failed or timed out during login:", profileError.message);
-                }
-            } catch (err) {
-                console.error("[Auth] Exception fetching profile during login:", err);
-            }
-        }
+        // Return user_metadata.role as a fast best-effort value.
+        // The authoritative DB role will be available via `userRole` from context
+        // once fetchProfile (triggered by onAuthStateChange SIGNED_IN) resolves.
+        // Consumers that need the DB-authoritative role should read `userRole`
+        // from context rather than relying on this return value.
+        const role: UserRole = (data.user?.user_metadata?.role as UserRole) ?? null;
 
         console.log("[Auth] signIn: resolved role =", role);
         return { error, role };

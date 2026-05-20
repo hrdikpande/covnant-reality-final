@@ -16,6 +16,7 @@ export function AppShell({ children }: AppShellProps) {
     const isBuilderRoute = pathname?.startsWith("/builder");
     const isAdminRoute = pathname?.startsWith("/admin");
     const isOwnerRoute = pathname?.startsWith("/owner");
+    const isPropertyDetailRoute = pathname?.startsWith("/property/");
     const isDedicatedLayout = isAgentRoute || isDashboardRoute || isBuilderRoute || isAdminRoute || isOwnerRoute;
 
     return (
@@ -29,7 +30,8 @@ export function AppShell({ children }: AppShellProps) {
 
             {!isDedicatedLayout && <Footer />}
 
-            {!isDedicatedLayout && <BottomNav />}
+            {!isDedicatedLayout && !isPropertyDetailRoute && <BottomNav />}
         </div>
     );
 }
+
