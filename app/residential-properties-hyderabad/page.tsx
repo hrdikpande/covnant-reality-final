@@ -1,17 +1,36 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, BASE_URL } from "@/lib/seo/metadata";
 import { JsonLd, getWebPageSchema, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CTASection } from "@/components/seo/CTASection";
 import { InternalLinksGrid } from "@/components/seo/InternalLinksGrid";
+import { FaqSection } from "@/components/seo/FaqSection";
 import Link from "next/link";
+
+const FAQS = [
+  {
+    question: "What is the price range for residential properties in Hyderabad?",
+    answer:
+      "Hyderabad flats range from around ₹25 lakhs in emerging localities like Miyapur, Bachupally, and Kompally to ₹5+ crores for premium apartments and villas in areas like Jubilee Hills and Banjara Hills.",
+  },
+  {
+    question: "Are Covnant Reality's residential projects RERA approved?",
+    answer:
+      "Yes. All residential projects listed by Covnant Reality are RERA approved, and every project is vetted for legal compliance, construction quality, and developer reputation before being added to the platform.",
+  },
+  {
+    question: "Which are the best residential areas in Hyderabad?",
+    answer:
+      "Gachibowli and Kondapur are popular for IT-hub proximity and gated communities, Miyapur and Bachupally offer affordable metro-connected flats, and Jubilee Hills and Banjara Hills are Hyderabad's most premium residential addresses.",
+  },
+];
 
 export const metadata: Metadata = buildMetadata("residential");
 
 export default function ResidentialPropertiesHyderabadPage() {
   return (
     <main className="bg-bg min-h-screen">
-      <JsonLd data={getWebPageSchema({ name: "Residential Properties in Hyderabad", description: "Browse luxury apartments, gated communities, villas, and affordable housing in Hyderabad.", url: "https://www.covnantreality.com/residential-properties-hyderabad" })} />
-      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: "https://www.covnantreality.com" }, { name: "Residential Properties in Hyderabad", url: "https://www.covnantreality.com/residential-properties-hyderabad" }])} />
+      <JsonLd data={getWebPageSchema({ name: "Residential Properties in Hyderabad", description: "Browse luxury apartments, gated communities, villas, and affordable housing in Hyderabad.", url: `${BASE_URL}/residential-properties-hyderabad` })} />
+      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: BASE_URL }, { name: "Residential Properties in Hyderabad", url: `${BASE_URL}/residential-properties-hyderabad` }])} />
 
       <section className="bg-gradient-to-br from-accent/5 via-bg to-accent/10 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,6 +124,8 @@ export default function ResidentialPropertiesHyderabadPage() {
             </div>
             <p className="text-text-secondary leading-relaxed">Whether you&apos;re searching for houses, flats, villas, or duplex homes &mdash; our team handles property search, property valuation, stamp duty guidance, registration charges consultation, and post-purchase property management. We are your complete property company in Hyderabad.</p>
           </section>
+
+          <FaqSection faqs={FAQS} />
         </article>
 
         <CTASection title="Find Your Dream Home Today" description="Let our residential property experts help you find the perfect home in Hyderabad. Schedule a free property consultation now." />

@@ -7,6 +7,7 @@ import { Search, Edit, Trash2, Eye } from "lucide-react";
 import { getOwnerProperties, deleteOwnerProperty, type OwnerProperty } from "@/lib/supabase/owner";
 import { useAuth } from "@/components/AuthContext";
 import { Input } from "@/components/ui/Input";
+import { generatePropertySlug } from "@/lib/slugify";
 
 export function OwnerPropertiesView() {
     const { user } = useAuth();
@@ -157,7 +158,7 @@ export function OwnerPropertiesView() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Link href={`/property/${(property as OwnerProperty & { slug?: string }).slug || property.id}`} prefetch={false}>
+                                                <Link href={`/property/${generatePropertySlug({ id: property.id, property_type: property.property_type, city: property.city })}`} prefetch={false}>
                                                     <button className="p-2 text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="View Details">
                                                         <Eye className="w-4 h-4" />
                                                     </button>

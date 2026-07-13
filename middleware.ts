@@ -16,7 +16,6 @@ const PROTECTED_ROUTES: Record<string, UserRole[]> = {
     "/builder": ["builder"],
     "/admin": ["admin"],
     "/owner": ["owner"],
-    "/property": ["buyer", "tenant", "owner", "agent", "builder", "admin"],
 };
 
 /** Routes that authenticated users should NOT visit (redirect to their dashboard). */

@@ -7,6 +7,7 @@ import { PropertyStoreProvider } from "@/components/PropertyStoreContext";
 import { AuthProvider } from "@/components/AuthContext";
 import { LocationProvider } from "@/components/LocationContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { BASE_URL } from "@/lib/seo/metadata";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.covnantreality.com"),
+  metadataBase: new URL(BASE_URL),
   title: {
     default: "Covnant Reality – Commercial & Residential Properties in Hyderabad",
     template: "%s | Covnant Reality",
@@ -50,13 +51,13 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.covnantreality.com",
+    canonical: BASE_URL,
   },
   openGraph: {
     title: "Covnant Reality – Commercial & Residential Properties in Hyderabad",
     description:
       "Find the best commercial property, residential properties, warehouses, and plots in Hyderabad. Covnant Reality – Hyderabad's trusted real estate company.",
-    url: "https://www.covnantreality.com",
+    url: BASE_URL,
     siteName: "Covnant Reality",
     type: "website",
     locale: "en_IN",
@@ -97,9 +98,6 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <meta name="google-site-verification" content="QaKdfjjYWbl-xrStaiJ5xD2ERrjnjPUUDe4F34fR0fw" />
-        <meta name="msvalidate.01" content="2E4D98900ECB345C872D5A82A49DCD46" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>

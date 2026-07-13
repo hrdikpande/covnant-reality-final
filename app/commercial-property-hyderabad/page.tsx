@@ -1,9 +1,28 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, BASE_URL } from "@/lib/seo/metadata";
 import { JsonLd, getWebPageSchema, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CTASection } from "@/components/seo/CTASection";
 import { InternalLinksGrid } from "@/components/seo/InternalLinksGrid";
+import { FaqSection } from "@/components/seo/FaqSection";
 import Link from "next/link";
+
+const FAQS = [
+  {
+    question: "What types of commercial property are available in Hyderabad?",
+    answer:
+      "Hyderabad offers office buildings and Grade A spaces, IT park offices with plug-and-play infrastructure, high-visibility retail units and showrooms, flexible co-working spaces, commercial plots and land, and shops within established commercial complexes.",
+  },
+  {
+    question: "Should I buy or lease commercial property in Hyderabad?",
+    answer:
+      "Buying suits businesses seeking long-term capital appreciation, full control over customization, and tax benefits on ownership. Leasing suits startups and SMEs that want lower upfront investment, flexibility to scale or relocate, and access to premium locations at affordable monthly rates.",
+  },
+  {
+    question: "Which are the best areas for commercial property in Hyderabad?",
+    answer:
+      "HITEC City (IT parks and corporate offices), Gachibowli (Financial District, Grade A buildings), Banjara Hills and Jubilee Hills (premium retail and offices), Kondapur (fast-growing commercial hub), and Madhapur (Cyber Towers tech ecosystem) are Hyderabad's top commercial locations.",
+  },
+];
 
 export const metadata: Metadata = buildMetadata("commercial");
 
@@ -15,15 +34,15 @@ export default function CommercialPropertyHyderabadPage() {
           name: "Commercial Property in Hyderabad",
           description:
             "Explore premium commercial property in Hyderabad – IT parks, retail spaces, co-working spaces, office buildings & more.",
-          url: "https://www.covnantreality.com/commercial-property-hyderabad",
+          url: `${BASE_URL}/commercial-property-hyderabad`,
         })}
       />
       <JsonLd
         data={getBreadcrumbSchema([
-          { name: "Home", url: "https://www.covnantreality.com" },
+          { name: "Home", url: BASE_URL },
           {
             name: "Commercial Property in Hyderabad",
-            url: "https://www.covnantreality.com/commercial-property-hyderabad",
+            url: `${BASE_URL}/commercial-property-hyderabad`,
           },
         ])}
       />
@@ -223,6 +242,8 @@ export default function CommercialPropertyHyderabadPage() {
               ))}
             </div>
           </section>
+
+          <FaqSection faqs={FAQS} />
         </article>
 
         {/* CTA */}

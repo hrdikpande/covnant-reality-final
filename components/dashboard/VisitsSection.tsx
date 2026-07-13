@@ -9,6 +9,7 @@ import { EmptyState } from "./EmptyState";
 import { CardSkeleton } from "./Skeletons";
 import type { SiteVisitRow, VisitStatus } from "./types";
 import type { BadgeVariant } from "@/types";
+import { generatePropertySlug } from "@/lib/slugify";
 
 const STATUS_VARIANT: Record<VisitStatus, BadgeVariant> = {
     requested: "warning",
@@ -132,7 +133,7 @@ export function VisitsSection({ visits, loading }: VisitsSectionProps) {
 
                                     <div className="flex items-center gap-3 pt-2 border-t border-border">
                                         <Link
-                                            href={`/property/${visit.property_id}`}
+                                            href={`/property/${generatePropertySlug({ id: visit.property_id })}`}
                                             className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
                                         >
                                             View Property

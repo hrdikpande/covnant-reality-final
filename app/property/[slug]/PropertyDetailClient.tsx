@@ -23,7 +23,6 @@ import { fetchPropertyById } from "@/lib/supabase/homepage";
 import { DescriptionSection } from "@/components/property/detail/DescriptionSection";
 import type { Property } from "@/types";
 import { AreaUnit } from "@/utils/areaConversion";
-import { useRouter } from "next/navigation";
 import { parsePropertySlug, isUUID } from "@/lib/slugify";
 import { createClient } from "@/lib/supabase/client";
 
@@ -69,8 +68,7 @@ async function resolveSlugToId(slug: string): Promise<string | null> {
 
 export function PropertyDetailClient({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = React.use(params);
-    const { user, isLoading: authLoading } = useAuth();
-    const router = useRouter();
+    const { user } = useAuth();
     const trackedRef = useRef(false);
 
     const [property, setProperty] = useState<Property | null>(null);
@@ -136,13 +134,6 @@ export function PropertyDetailClient({ params }: { params: Promise<{ slug: strin
         recordPropertyView(propertyId, user?.id ?? null);
         return () => { pendingViews.delete(propertyId); };
     }, [propertyId, user?.id]);
-
-    // ── Redirect if not logged in ──────────────────────────────────────────
-    useEffect(() => {
-        if (!authLoading && !user) {
-            router.push(`/login?next=/property/${slug}`);
-        }
-    }, [user, authLoading, router, slug]);
 
     // ── Loading ────────────────────────────────────────────────────────────
     if (loading) {

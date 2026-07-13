@@ -1,10 +1,13 @@
 import type { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { generatePropertySlug } from '@/lib/slugify'
 
 export const revalidate = 3600; // revalidate the sitemap every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.covnantreality.com'
+  // Canonical host is non-www — www 301-redirects here. If NEXT_PUBLIC_BASE_URL
+  // is set in the hosting environment, it must also be the non-www host.
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://covnantreality.com'
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -29,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (supabaseUrl && supabaseKey) {
     const { data, error } = await supabase
       .from('properties')
-      .select('id, created_at')
+      .select('id, created_at, property_type, commercial_type, locality, city, state')
       .eq('status', 'approved')
       
       if (error) {
@@ -51,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const propertyEntries: MetadataRoute.Sitemap = properties.map((property) => ({
-    url: `${baseUrl}/property/${property.slug || property.id}`,
+    url: `${baseUrl}/property/${generatePropertySlug(property)}`,
     lastModified: new Date(property.created_at),
     changeFrequency: 'weekly',
     priority: 0.8,

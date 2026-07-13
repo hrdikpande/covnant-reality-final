@@ -7,6 +7,7 @@ import { PropertyCardSkeleton } from "./Skeletons";
 import type { SavedPropertyRow } from "./types";
 import Link from "next/link";
 import Image from "next/image";
+import { generatePropertySlug } from "@/lib/slugify";
 
 interface SavedSectionProps {
     properties: SavedPropertyRow[];
@@ -71,7 +72,7 @@ export function SavedSection({ properties, loading }: SavedSectionProps) {
                                             ₹{p.price.toLocaleString("en-IN")}
                                         </span>
                                         <Link
-                                            href={`/property/${(p as typeof p & { slug?: string }).slug || p.id}`}
+                                            href={`/property/${generatePropertySlug({ id: p.id, property_type: p.property_type, city: p.city })}`}
                                             className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
                                         >
                                             View →

@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatPropertyTitle } from '@/lib/utils';
 import { isCorruptedLocation } from '@/lib/locationUtils';
 import { useLocation } from '@/components/LocationContext';
+import { generatePropertySlug } from '@/lib/slugify';
 import type { SearchProperty, SearchFilters } from '@/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -51,7 +52,7 @@ function SearchPropertyCard({ property }: { property: SearchProperty }) {
 
     return (
         <Link
-            href={`/property/${property.slug || property.id}`}
+            href={`/property/${generatePropertySlug(property)}`}
             className="group bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col"
         >
             {/* Property Image */}

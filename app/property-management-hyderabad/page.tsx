@@ -1,17 +1,36 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, BASE_URL } from "@/lib/seo/metadata";
 import { JsonLd, getWebPageSchema, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CTASection } from "@/components/seo/CTASection";
 import { InternalLinksGrid } from "@/components/seo/InternalLinksGrid";
+import { FaqSection } from "@/components/seo/FaqSection";
 import Link from "next/link";
+
+const FAQS = [
+  {
+    question: "What services are included in property management in Hyderabad?",
+    answer:
+      "Covnant Reality's property management covers tenant sourcing and screening, rent collection, preventive and reactive maintenance, regular property inspections with photo reports, legal documentation and lease agreements, investment advisory, and facility management for commercial properties.",
+  },
+  {
+    question: "Do you offer property management for NRI property owners?",
+    answer:
+      "Yes. Covnant Reality provides dedicated NRI property management services, including power of attorney support, property tax management, and remote property oversight for owners living abroad.",
+  },
+  {
+    question: "Is there a fee for property management services?",
+    answer:
+      "Covnant Reality uses transparent, upfront pricing with no hidden fees, and property owners receive detailed monthly statements along with online portal access to track rent, maintenance requests, and property reports in real time.",
+  },
+];
 
 export const metadata: Metadata = buildMetadata("propertyManagement");
 
 export default function PropertyManagementHyderabadPage() {
   return (
     <main className="bg-bg min-h-screen">
-      <JsonLd data={getWebPageSchema({ name: "Property Management in Hyderabad", description: "Professional property management services in Hyderabad including rental management, tenant services, and real estate advisory.", url: "https://www.covnantreality.com/property-management-hyderabad" })} />
-      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: "https://www.covnantreality.com" }, { name: "Property Management in Hyderabad", url: "https://www.covnantreality.com/property-management-hyderabad" }])} />
+      <JsonLd data={getWebPageSchema({ name: "Property Management in Hyderabad", description: "Professional property management services in Hyderabad including rental management, tenant services, and real estate advisory.", url: `${BASE_URL}/property-management-hyderabad` })} />
+      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: BASE_URL }, { name: "Property Management in Hyderabad", url: `${BASE_URL}/property-management-hyderabad` }])} />
 
       <section className="bg-gradient-to-br from-primary/5 via-bg to-accent/5 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,6 +97,8 @@ export default function PropertyManagementHyderabadPage() {
               ))}
             </div>
           </section>
+
+          <FaqSection faqs={FAQS} />
         </article>
 
         <CTASection title="Let Us Manage Your Property" description="Free yourself from the hassles of property management. Our professional team handles everything while you enjoy stress-free ownership." />

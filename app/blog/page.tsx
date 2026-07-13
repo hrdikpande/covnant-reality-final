@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, BASE_URL } from "@/lib/seo/metadata";
 import { JsonLd, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
@@ -35,7 +35,7 @@ export default async function BlogPage() {
 
   return (
     <main className="bg-bg min-h-screen">
-      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: "https://www.covnantreality.com" }, { name: "Blog", url: "https://www.covnantreality.com/blog" }])} />
+      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: BASE_URL }, { name: "Blog", url: `${BASE_URL}/blog` }])} />
 
       <section className="bg-gradient-to-br from-primary/5 via-bg to-accent/5 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

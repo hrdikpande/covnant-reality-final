@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Maximize2, Lock, Unlock, Loader2, CheckCircle2, Clock, XCircle, FileText, ExternalLink } from "lucide-react";
 import type { Property } from "@/types";
 import { useAuth } from "@/components/AuthContext";
+import { generatePropertySlug } from "@/lib/slugify";
 import {
     getFloorPlanRequestStatus,
     requestFloorPlanAccess,
@@ -56,7 +57,7 @@ export function FloorPlanSection({ property }: FloorPlanSectionProps) {
     // ── Request handler ─────────────────────────────────────────────────
     const handleRequestAccess = async () => {
         if (!user) {
-            window.location.href = `/login?next=/property/${propertyId}`;
+            window.location.href = `/login?next=/property/${generatePropertySlug(property)}`;
             return;
         }
         setSubmitting(true);

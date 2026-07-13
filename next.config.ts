@@ -73,11 +73,25 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        // Everything EXCEPT the private/authenticated areas gets "index, follow".
+        // The negative lookahead keeps this mutually exclusive with the rule
+        // below so there's no ambiguity about which X-Robots-Tag value wins.
+        source: '/((?!admin|agent|builder|owner|dashboard).*)',
         headers: [
           {
             key: 'X-Robots-Tag',
             value: 'index, follow',
+          },
+        ],
+      },
+      {
+        // Private/authenticated areas must never be indexable, even if
+        // robots.txt disallow rules are ever loosened or a link leaks out.
+        source: '/(admin|agent|builder|owner|dashboard)/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow',
           },
         ],
       },

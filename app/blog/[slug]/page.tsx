@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { JsonLd, getBreadcrumbSchema } from "@/components/seo/JsonLd";
+import { JsonLd, getBreadcrumbSchema, getBlogPostingSchema } from "@/components/seo/JsonLd";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
 import { PropertyCard } from "@/components/ui/PropertyCard";
+import { BASE_URL } from "@/lib/seo/metadata";
 
 export const revalidate = 60; // Revalidate every 60 seconds for fast loads
 
@@ -71,7 +72,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     const { blog } = data;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.covnantreality.com";
 
     return {
         title: blog.meta_title || blog.title,
@@ -80,13 +80,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         openGraph: {
             title: blog.meta_title || blog.title,
             description: blog.meta_description || blog.excerpt,
-            url: `${siteUrl}/blog/${blog.slug}`,
+            url: `${BASE_URL}/blog/${blog.slug}`,
             type: "article",
             publishedTime: blog.published_at || blog.created_at,
             images: blog.og_image ? [{ url: blog.og_image }] : [],
         },
         alternates: {
-            canonical: `${siteUrl}/blog/${blog.slug}`
+            canonical: `${BASE_URL}/blog/${blog.slug}`
         }
     };
 }
@@ -100,22 +100,33 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     }
 
     const { blog, properties } = data;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.covnantreality.com";
 
     return (
         <main className="bg-bg min-h-screen">
             {/* Breadcrumb Schema */}
             <JsonLd data={getBreadcrumbSchema([
-                { name: "Home", url: siteUrl },
-                { name: "Blog", url: `${siteUrl}/blog` },
-                { name: blog.title, url: `${siteUrl}/blog/${blog.slug}` }
+                { name: "Home", url: BASE_URL },
+                { name: "Blog", url: `${BASE_URL}/blog` },
+                { name: blog.title, url: `${BASE_URL}/blog/${blog.slug}` }
             ])} />
 
-            {/* Blog Schema */}
-            {blog.schema_markup && (
+            {/* Blog Schema — use CMS-authored schema when present, otherwise fall back
+                to a generated BlogPosting schema so every post carries structured data */}
+            {blog.schema_markup ? (
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(blog.schema_markup) }}
+                />
+            ) : (
+                <JsonLd
+                    data={getBlogPostingSchema({
+                        title: blog.title,
+                        description: blog.meta_description || blog.excerpt || "",
+                        slug: blog.slug,
+                        datePublished: blog.published_at || blog.created_at,
+                        dateModified: blog.updated_at,
+                        imageUrl: blog.og_image || undefined,
+                    })}
                 />
             )}
 

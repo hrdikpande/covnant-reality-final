@@ -1,17 +1,36 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, BASE_URL } from "@/lib/seo/metadata";
 import { JsonLd, getWebPageSchema, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CTASection } from "@/components/seo/CTASection";
 import { InternalLinksGrid } from "@/components/seo/InternalLinksGrid";
+import { FaqSection } from "@/components/seo/FaqSection";
 import Link from "next/link";
+
+const FAQS = [
+  {
+    question: "Is buying a plot in Hyderabad a good investment?",
+    answer:
+      "Plots in Hyderabad have consistently delivered 15-25% annual appreciation in emerging corridors, driven by the city's infrastructure development and IT-sector growth. Unlike apartments, plots also offer the flexibility to build, develop, or hold for capital appreciation.",
+  },
+  {
+    question: "What documents should I verify before buying a plot in Hyderabad?",
+    answer:
+      "Verify the HMDA/DTCP layout approval, the title deed and ownership chain going back 30+ years, a clear encumbrance certificate (EC), absence of pending litigation, property tax payment receipts, land use zoning, survey number and boundaries, and any government acquisition notices.",
+  },
+  {
+    question: "What's the difference between residential and commercial plots in Hyderabad?",
+    answer:
+      "Residential plots are HMDA/DTCP-approved for building homes, typically 100 to 1000+ sq.yards, ideal for personal use or long-term investment. Commercial plots sit on prime roads and highways, are zoned for commercial or mixed-use development, cost more per sq.ft., but offer stronger rental yields.",
+  },
+];
 
 export const metadata: Metadata = buildMetadata("plots");
 
 export default function PlotsLandHyderabadPage() {
   return (
     <main className="bg-bg min-h-screen">
-      <JsonLd data={getWebPageSchema({ name: "Plots and Land in Hyderabad", description: "Invest in plots and land in Hyderabad. Find commercial plots, residential plots, and farmhouse land at the best prices.", url: "https://www.covnantreality.com/plots-land-hyderabad" })} />
-      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: "https://www.covnantreality.com" }, { name: "Plots & Land in Hyderabad", url: "https://www.covnantreality.com/plots-land-hyderabad" }])} />
+      <JsonLd data={getWebPageSchema({ name: "Plots and Land in Hyderabad", description: "Invest in plots and land in Hyderabad. Find commercial plots, residential plots, and farmhouse land at the best prices.", url: `${BASE_URL}/plots-land-hyderabad` })} />
+      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: BASE_URL }, { name: "Plots & Land in Hyderabad", url: `${BASE_URL}/plots-land-hyderabad` }])} />
 
       <section className="bg-gradient-to-br from-accent/5 via-bg to-primary/5 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -110,6 +129,8 @@ export default function PlotsLandHyderabadPage() {
               ))}
             </div>
           </section>
+
+          <FaqSection faqs={FAQS} />
         </article>
 
         <CTASection title="Start Your Land Investment Journey" description="Our plot and land experts will help you find verified, legally clear plots in Hyderabad's best growth corridors. Get a free investment consultation today." />

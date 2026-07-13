@@ -10,8 +10,7 @@ import {
   isUUID,
 } from "@/lib/slugify";
 import { notFound, redirect } from "next/navigation";
-
-const BASE_URL = "https://www.covnantreality.com";
+import { BASE_URL } from "@/lib/seo/metadata";
 
 function getSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -70,15 +69,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const data = await findProperty(slug);
 
     if (!data || data.status === 'expired' || data.status === 'sold' || data.status === 'draft') {
-      return { 
-        title: "Property Not Found | Covnant Reality",
+      return {
+        title: { absolute: "Property Not Found | Covnant Reality" },
         robots: { index: false, follow: false }
       };
     }
 
     // If it was a UUID, we don't return full metadata here as it will redirect
     if (isUUID(slug)) {
-      return { title: "Redirecting..." };
+      return { title: { absolute: "Redirecting..." } };
     }
 
     const generatedSlug = generatePropertySlug({
@@ -91,8 +90,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     });
 
     // SEO-optimized Title: "{Property Name} for Sale in {City} | Covnant Reality"
+    // Some stored property titles already contain "for Rent"/"for Sale" —
+    // skip re-appending the intent phrase in that case to avoid duplication.
     const intent = data.listing_type === 'rent' ? 'Rent' : 'Sale';
-    const title = `${data.title || 'Property'} for ${intent} in ${data.city || 'Hyderabad'} | Covnant Reality`;
+    const baseName = data.title || 'Property';
+    const alreadyHasIntent = /\bfor\s+(rent|sale)\b/i.test(baseName);
+    const title = alreadyHasIntent
+      ? `${baseName} in ${data.city || 'Hyderabad'} | Covnant Reality`
+      : `${baseName} for ${intent} in ${data.city || 'Hyderabad'} | Covnant Reality`;
 
     // SEO-optimized Description: Trimmed to 155 chars
     let description = data.description 
@@ -110,7 +115,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       : "/og-image.jpg";
 
     return {
-      title,
+      title: { absolute: title },
       description,
       keywords: `${data.property_type || "property"} ${data.commercial_type || ""} ${data.locality || ""} ${data.city || "Hyderabad"} ${data.state || "Telangana"} real estate covnant reality`.trim(),
       alternates: { canonical: canonicalUrl },
@@ -185,7 +190,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     const firstMedia = data.property_media?.find((m: any) => m.media_type === 'image' || !m.media_type);
     const imageUrl = firstMedia?.media_url
       ? (firstMedia.media_url.startsWith('http') ? firstMedia.media_url : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${firstMedia.media_url}`)
-      : "https://www.covnantreality.com/og-image.jpg";
+      : `${BASE_URL}/og-image.jpg`;
 
     schemaData = getRealEstateListingSchema({
       title: data.title || pageTitle,
@@ -197,7 +202,6 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       city: data.city || "Hyderabad",
       location: data.locality || "",
       imageUrl: imageUrl,
-      useSlugUrl: true,
     });
 
     breadcrumbData = getBreadcrumbSchema([

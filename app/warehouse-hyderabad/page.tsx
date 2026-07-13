@@ -1,17 +1,36 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, BASE_URL } from "@/lib/seo/metadata";
 import { JsonLd, getWebPageSchema, getBreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CTASection } from "@/components/seo/CTASection";
 import { InternalLinksGrid } from "@/components/seo/InternalLinksGrid";
+import { FaqSection } from "@/components/seo/FaqSection";
 import Link from "next/link";
+
+const FAQS = [
+  {
+    question: "How much does it cost to rent a warehouse in Hyderabad?",
+    answer:
+      "Warehouse rents in Hyderabad start from as low as ₹12 per sq.ft., with pricing varying by zone, size, and specification — cold storage and bonded warehouses typically command a premium over standard dry warehousing.",
+  },
+  {
+    question: "What types of warehouses are available in Hyderabad?",
+    answer:
+      "Options include temperature-controlled cold storage warehouses, standard dry warehouses for FMCG and retail, logistics and distribution hubs near highways and airports, industrial sheds for manufacturing, flexible warehouses combining storage and office space, and customs-bonded warehouses near SEZ areas.",
+  },
+  {
+    question: "Which are the top warehouse zones in Hyderabad?",
+    answer:
+      "Patancheru is Hyderabad's largest industrial belt, Medchal offers affordable warehouse land on NH-44, Shamshabad suits air cargo and cold chain due to airport proximity, and Bonthapally, Jeedimetla, and Kompally are established or emerging industrial estates.",
+  },
+];
 
 export const metadata: Metadata = buildMetadata("warehouse");
 
 export default function WarehouseHyderabadPage() {
   return (
     <main className="bg-bg min-h-screen">
-      <JsonLd data={getWebPageSchema({ name: "Warehouse in Hyderabad", description: "Find industrial property, warehouses, and commercial land across all major business districts in Hyderabad.", url: "https://www.covnantreality.com/warehouse-hyderabad" })} />
-      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: "https://www.covnantreality.com" }, { name: "Warehouse in Hyderabad", url: "https://www.covnantreality.com/warehouse-hyderabad" }])} />
+      <JsonLd data={getWebPageSchema({ name: "Warehouse in Hyderabad", description: "Find industrial property, warehouses, and commercial land across all major business districts in Hyderabad.", url: `${BASE_URL}/warehouse-hyderabad` })} />
+      <JsonLd data={getBreadcrumbSchema([{ name: "Home", url: BASE_URL }, { name: "Warehouse in Hyderabad", url: `${BASE_URL}/warehouse-hyderabad` }])} />
 
       <section className="bg-gradient-to-br from-warning/5 via-bg to-warning/10 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,6 +123,8 @@ export default function WarehouseHyderabadPage() {
             </div>
             <p className="text-text-secondary leading-relaxed">Covnant Reality&apos;s industrial property team helps you evaluate both options based on your business requirements, budget, and growth trajectory. We handle property valuation, lease agreement negotiations, and sale deed processing.</p>
           </section>
+
+          <FaqSection faqs={FAQS} />
         </article>
 
         <CTASection title="Talk to Our Industrial Property Team" description="Need a warehouse in Hyderabad? Our industrial real estate experts will help you find the perfect space at the best price. Get a free site visit and consultation." />

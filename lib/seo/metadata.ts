@@ -1,7 +1,9 @@
 // ─── Central SEO Metadata Configuration ─────────────────────────────────────
 // Maps routes to their SEO metadata. Used by generateMetadata() in each page.
 
-const BASE_URL = "https://www.covnantreality.com";
+// Canonical host is non-www. The www host 301-redirects here — never
+// hardcode "www.covnantreality.com" elsewhere; import BASE_URL from here.
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://covnantreality.com";
 const BRAND = "Covnant Reality";
 const OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
@@ -136,7 +138,10 @@ export function buildMetadata(page: keyof typeof SEO_CONFIG) {
   if (!seo) return {};
 
   return {
-    title: seo.title,
+    // `absolute` opts out of the root layout's `title.template` — these
+    // titles already embed the full "| Covnant Reality" brand suffix, so
+    // letting the template run too would double it up.
+    title: { absolute: seo.title },
     description: seo.description,
     keywords: seo.keywords,
     alternates: {

@@ -1,0 +1,24 @@
+# Covnant Reality
+
+> Covnant Reality is a real estate company based in Hyderabad, Telangana, India, listing commercial property, residential properties, warehouses, and plots/land for sale and rent across Hyderabad.
+
+## Main sections
+
+- [Home](https://covnantreality.com/): Property search across commercial, residential, warehouse, and plot listings in Hyderabad.
+- [Commercial Property in Hyderabad](https://covnantreality.com/commercial-property-hyderabad): Offices, retail space, IT parks, and co-working spaces.
+- [Residential Properties in Hyderabad](https://covnantreality.com/residential-properties-hyderabad): Flats, villas, and gated-community apartments.
+- [Warehouse in Hyderabad](https://covnantreality.com/warehouse-hyderabad): Industrial sheds and warehouse space for lease or sale.
+- [Plots & Land in Hyderabad](https://covnantreality.com/plots-land-hyderabad): Residential and commercial plots.
+- [Property Management in Hyderabad](https://covnantreality.com/property-management-hyderabad): Rental management, tenant services, and maintenance.
+- [Search](https://covnantreality.com/search): Filterable property search across all listing types.
+- [Blog](https://covnantreality.com/blog): Hyderabad real estate market insights and property guides.
+- [FAQ](https://covnantreality.com/faq): Common questions about listing, buying, renting, and account features.
+- [About](https://covnantreality.com/about): Company background.
+- [Contact](https://covnantreality.com/contact): Contact details and inquiry form.
+
+## Key facts
+
+- Service area: Hyderabad, Telangana, India.
+- Listing types: commercial property, residential property, warehouses/industrial sheds, plots and land.
+- Transaction types: sale and rent.
+- Individual property listings are published under `/property/{seo-slug}` and are publicly viewable without an account.

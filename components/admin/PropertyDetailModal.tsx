@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import type { AdminProperty } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { generatePropertySlug } from "@/lib/slugify";
 
 interface PropertyDetailModalProps {
     isOpen: boolean;
@@ -224,7 +225,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                 {/* Footer Actions */}
                 <div className="px-6 py-5 border-t border-slate-100 bg-white shrink-0 flex items-center justify-between gap-4">
                     <Link
-                        href={`/property/${property.id}`}
+                        href={`/property/${generatePropertySlug(property)}`}
                         target="_blank"
                         className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-hover transition-colors"
                     >

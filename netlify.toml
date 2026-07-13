@@ -29,7 +29,12 @@
 #
 #   NEXT_PUBLIC_SUPABASE_URL       = https://your-project.supabase.co
 #   NEXT_PUBLIC_SUPABASE_ANON_KEY  = eyJ...
-#   NEXT_PUBLIC_BASE_URL           = https://www.covnantreality.com
+#   NEXT_PUBLIC_BASE_URL           = https://covnantreality.com
+#
+# IMPORTANT: NEXT_PUBLIC_BASE_URL must be the non-www host. www.covnantreality.com
+# 301-redirects to covnantreality.com — if this var is set to the www host in
+# Netlify's dashboard, it silently overrides the non-www fallback baked into
+# the code and reintroduces the "3XX redirect in sitemap" issue.
 #
 # Do NOT commit real secrets here — use Netlify's dashboard.
 # ──────────────────────────────────────────────────────────────
@@ -54,6 +59,9 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
     X-XSS-Protection = "1; mode=block"
+    # Site is HTTPS-only on Netlify; tell browsers to skip the plaintext hop
+    # on repeat visits and never fall back to HTTP.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 
 # Cache static assets aggressively (Next.js hashed filenames ensure cache-busting)
 [[headers]]

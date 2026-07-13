@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { cn, formatPropertyTitle } from "@/lib/utils";
 import { usePropertyContext } from "@/components/PropertyContext";
 import { createLead } from "@/lib/supabase/leads";
+import { generatePropertySlug } from "@/lib/slugify";
 import type { Property } from "@/types";
 
 interface PropertyCardProps {
@@ -69,7 +70,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
 
     return (
         <Link
-            href={`/property/${property.slug || id}`}
+            href={`/property/${generatePropertySlug(property)}`}
             className={cn(
                 "group bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 block",
                 className

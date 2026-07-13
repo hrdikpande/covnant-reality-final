@@ -1,4 +1,5 @@
 import { Property } from "@/types";
+import { BASE_URL } from "@/lib/seo/metadata";
 
 export interface GenerateBlogParams {
     properties: Property[];
@@ -174,7 +175,7 @@ export function generateBlog({ properties, rawContent, keyword, tone }: Generate
         "mentions": properties.map(p => ({
             "@type": p.type === "commercial" ? "CommercialEvent" : "Residence",
             "name": p.title,
-            "url": `https://www.covnantreality.com/property/${p.slug || p.id}`
+            "url": `${BASE_URL}/property/${p.slug || p.id}`
         }))
     };
 

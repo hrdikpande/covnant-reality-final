@@ -2,6 +2,7 @@
 // Injects schema.org JSON-LD into the page <head> for rich search results.
 
 import React from "react";
+import { BASE_URL } from "@/lib/seo/metadata";
 
 interface JsonLdProps {
   data: Record<string, unknown>;
@@ -29,9 +30,10 @@ export function getRealEstateAgentSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
+    "@id": `${BASE_URL}/#organization`,
     name: "Covnant Reality",
-    url: "https://www.covnantreality.com",
-    logo: "https://www.covnantreality.com/logo.png",
+    url: BASE_URL,
+    logo: `${BASE_URL}/logo.png`,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Hyderabad",
@@ -44,6 +46,29 @@ export function getRealEstateAgentSchema() {
     },
     description:
       "Leading real estate company in Hyderabad offering commercial property, residential properties, warehouses, and plots.",
+    knowsAbout: [
+      "Commercial Property in Hyderabad",
+      "Residential Properties in Hyderabad",
+      "Warehouses and Industrial Property in Hyderabad",
+      "Plots and Land in Hyderabad",
+      "Property Management in Hyderabad",
+    ],
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Property Services",
+      itemListElement: [
+        { "@type": "Service", name: "Commercial Property", url: `${BASE_URL}/commercial-property-hyderabad` },
+        { "@type": "Service", name: "Residential Properties", url: `${BASE_URL}/residential-properties-hyderabad` },
+        { "@type": "Service", name: "Warehouses", url: `${BASE_URL}/warehouse-hyderabad` },
+        { "@type": "Service", name: "Plots & Land", url: `${BASE_URL}/plots-land-hyderabad` },
+        { "@type": "Service", name: "Property Management", url: `${BASE_URL}/property-management-hyderabad` },
+      ],
+    },
+    // No verified telephone, street address, geo-coordinates, or social
+    // profiles are available yet — the Contact/Privacy/Terms pages currently
+    // show placeholder "New Delhi" details that contradict the Hyderabad
+    // brand used everywhere else. Add those fields here once real, verified
+    // business details are supplied (see audit notes).
     sameAs: [],
   };
 }
@@ -64,11 +89,8 @@ export function getRealEstateListingSchema(property: {
   areaSqft?: number | null;
   bedrooms?: number | null;
   imageUrl?: string | null;
-  useSlugUrl?: boolean;
 }) {
-  const urlPath = property.useSlugUrl
-    ? `https://www.covnantreality.com/property/${property.id}`
-    : `https://www.covnantreality.com/property/${property.id}`;
+  const urlPath = `${BASE_URL}/property/${property.id}`;
 
   return {
     "@context": "https://schema.org",
@@ -137,13 +159,13 @@ export function getWebPageSchema(page: {
     publisher: {
       "@type": "Organization",
       name: "Covnant Reality",
-      url: "https://www.covnantreality.com",
-      logo: "https://www.covnantreality.com/logo.png",
+      url: BASE_URL,
+      logo: `${BASE_URL}/logo.png`,
     },
     isPartOf: {
       "@type": "WebSite",
       name: "Covnant Reality",
-      url: "https://www.covnantreality.com",
+      url: BASE_URL,
     },
   };
 }
@@ -158,27 +180,29 @@ export function getBlogPostingSchema(post: {
   datePublished: string;
   dateModified?: string;
   authorName?: string;
+  imageUrl?: string;
 }) {
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
     description: post.description,
-    url: `https://www.covnantreality.com/blog/${post.slug}`,
+    url: `${BASE_URL}/blog/${post.slug}`,
+    image: post.imageUrl || `${BASE_URL}/og-image.jpg`,
     datePublished: post.datePublished,
     dateModified: post.dateModified || post.datePublished,
     author: {
       "@type": "Organization",
       name: post.authorName || "Covnant Reality",
-      url: "https://www.covnantreality.com",
+      url: BASE_URL,
     },
     publisher: {
       "@type": "Organization",
       name: "Covnant Reality",
-      url: "https://www.covnantreality.com",
+      url: BASE_URL,
       logo: {
         "@type": "ImageObject",
-        url: "https://www.covnantreality.com/logo.png",
+        url: `${BASE_URL}/logo.png`,
       },
     },
   };
