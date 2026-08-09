@@ -90,6 +90,13 @@
 # Redirects — handle common patterns
 # ──────────────────────────────────────────────────────────────
 
+# Force apex domain → www (canonical domain)
+[[redirects]]
+  from = "https://covnantreality.com/*"
+  to = "https://www.covnantreality.com/:splat"
+  status = 301
+  force = true
+
 # Google Search Console verification file (already in /public)
 [[redirects]]
   from = "/google2815e16a85206310.html"
